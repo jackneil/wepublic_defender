@@ -1,0 +1,325 @@
+#!/usr/bin/env python3
+"""
+Initialize standard directory structure for legal case management.
+Run this after cloning we_public_defender repo into a case folder.
+"""
+
+import os
+import sys
+from pathlib import Path
+
+# Standard directory structure
+DIRECTORIES = [
+    "00_NEW_DOCUMENTS_INBOX",
+    "01_CASE_OVERVIEW",
+    "02_PLEADINGS/01_Complaint",
+    "02_PLEADINGS/02_Answer",
+    "02_PLEADINGS/03_Motions",
+    "02_PLEADINGS/04_Orders",
+    "02_PLEADINGS/05_Briefs",
+    "02_PLEADINGS/06_Amendment",
+    "03_DISCOVERY/01_Our_Requests",
+    "03_DISCOVERY/02_Their_Requests",
+    "03_DISCOVERY/03_Our_Responses",
+    "03_DISCOVERY/04_Their_Responses",
+    "03_DISCOVERY/05_Deposition_Transcripts",
+    "04_EVIDENCE/01_Documents",
+    "04_EVIDENCE/02_Communications",
+    "04_EVIDENCE/03_Financial_Records",
+    "04_EVIDENCE/04_Expert_Reports",
+    "05_CORRESPONDENCE/01_With_Opposing_Counsel",
+    "05_CORRESPONDENCE/02_With_Court",
+    "05_CORRESPONDENCE/03_Internal",
+    "06_RESEARCH/01_Case_Law",
+    "06_RESEARCH/02_Statutes",
+    "06_RESEARCH/03_Secondary_Sources",
+    "07_DRAFTS_AND_WORK_PRODUCT/drafts",
+    "07_DRAFTS_AND_WORK_PRODUCT/outlines",
+    "07_DRAFTS_AND_WORK_PRODUCT/scripts",
+    "08_REFERENCE/court_rules",
+    "08_REFERENCE/forms",
+    "08_REFERENCE/templates",
+]
+
+# README templates for key directories
+README_TEMPLATES = {
+    "00_NEW_DOCUMENTS_INBOX/README.md": """# New Documents Inbox
+
+Place new documents here for organization.
+
+Claude will help organize these files into the appropriate directories.
+
+Run `/organize` command to categorize and move files.
+""",
+    "01_CASE_OVERVIEW/README.md": """# Case Overview
+
+This directory contains high-level case information:
+- case_summary.md: Brief description of the case
+- timeline.md: Key dates and events
+- parties.md: Information about parties and counsel
+- jurisdiction_notes.md: Court and jurisdiction details
+""",
+    "07_DRAFTS_AND_WORK_PRODUCT/README.md": """# Drafts and Work Product
+
+Working documents and drafts. Files here are NOT for filing.
+
+Structure:
+- drafts/: Document drafts in progress
+- outlines/: Outlines and planning documents
+- scripts/: Python scripts for document generation
+""",
+}
+
+def create_directory_structure():
+    """Create all standard directories."""
+    base_path = Path.cwd()
+
+    print("Initializing legal case directory structure...")
+    print(f"Base path: {base_path}\n")
+
+    created = 0
+    existed = 0
+
+    for dir_path in DIRECTORIES:
+        full_path = base_path / dir_path
+        if full_path.exists():
+            print(f"  [EXISTS] {dir_path}")
+            existed += 1
+        else:
+            full_path.mkdir(parents=True, exist_ok=True)
+            print(f"  [CREATED] {dir_path}")
+            created += 1
+
+    print(f"\nDirectories: {created} created, {existed} already existed")
+    return created, existed
+
+def create_readme_files():
+    """Create README files in key directories."""
+    base_path = Path.cwd()
+
+    print("\nCreating README files...")
+
+    for readme_path, content in README_TEMPLATES.items():
+        full_path = base_path / readme_path
+        if not full_path.exists():
+            full_path.write_text(content)
+            print(f"  [CREATED] {readme_path}")
+        else:
+            print(f"  [EXISTS] {readme_path}")
+
+def create_symlinks():
+    """Create symlinks for Claude configuration."""
+    base_path = Path.cwd()
+
+    print("\nCreating configuration symlinks...")
+
+    # Determine source path: try subdirectory first, then installed package
+    source_base = base_path / "wepublic_defender"
+    if not (source_base / ".claude").exists():
+        # Try finding it from installed package (go up to repo root)
+        try:
+            import wepublic_defender
+            source_base = Path(wepublic_defender.__file__).parent.parent
+        except (ImportError, AttributeError):
+            pass
+
+    # Symlink/Copy CLAUDE.md from repo to root (always overwrite)
+    claude_md_source = source_base / ".claude" / "CLAUDE.md"
+    claude_md_target = base_path / "CLAUDE.md"
+
+    if claude_md_source.exists():
+        # On Windows, use copy instead of symlink (requires admin)
+        if os.name == 'nt':
+            import shutil
+            shutil.copy2(claude_md_source, claude_md_target)
+            print(f"  [UPDATED] CLAUDE.md")
+        else:
+            if claude_md_target.exists():
+                claude_md_target.unlink()
+            claude_md_target.symlink_to(claude_md_source)
+            print(f"  [UPDATED] CLAUDE.md")
+    else:
+        print(f"  [WARNING] Source file not found: {claude_md_source}")
+
+    # Copy LEGAL_WORK_PROTOCOL.md (always overwrite)
+    protocol_source = source_base / ".claude" / "LEGAL_WORK_PROTOCOL.md"
+    protocol_target = base_path / "LEGAL_WORK_PROTOCOL.md"
+
+    if protocol_source.exists():
+        import shutil
+        shutil.copy2(protocol_source, protocol_target)
+        print(f"  [UPDATED] LEGAL_WORK_PROTOCOL.md")
+
+    # Copy .env example to root if no .env exists
+    env_example = base_path / "wepublic_defender" / ".env.example"
+    env_target = base_path / ".env"
+    if env_example.exists() and not env_target.exists():
+        import shutil
+        shutil.copy2(env_example, env_target)
+        print(f"  [COPIED] .env example to .env (fill in your API keys)")
+
+    # Ensure per-case settings directory exists and copy default settings
+    case_settings = base_path / ".wepublic_defender"
+    case_settings.mkdir(parents=True, exist_ok=True)
+
+    # Locate source config directory robustly (works regardless of CWD)
+    repo_root = Path(__file__).resolve().parents[1]  # repo root
+    source_candidates = [
+        repo_root / "wepublic_defender" / "config",  # package config path
+        repo_root / "config",  # fallback if config is at repo root
+    ]
+    source_config_dir = None
+    for cand in source_candidates:
+        if cand.exists():
+            source_config_dir = cand
+            break
+
+    if source_config_dir is None:
+        print("  [WARN] Could not locate source config directory.")
+        return
+
+    default_review = source_config_dir / "legal_review_settings.json"
+    target_review = case_settings / "legal_review_settings.json"
+    if default_review.exists() and not target_review.exists():
+        import shutil
+        shutil.copy2(default_review, target_review)
+        print(f"  [COPIED] per-case settings: .wepublic_defender/legal_review_settings.json")
+
+    default_providers = source_config_dir / "llm_providers.json"
+    target_providers = case_settings / "llm_providers.json"
+    if default_providers.exists() and not target_providers.exists():
+        import shutil
+        shutil.copy2(default_providers, target_providers)
+        print(f"  [COPIED] per-case settings: .wepublic_defender/llm_providers.json")
+    if not default_review.exists() or not default_providers.exists():
+        print("  [WARN] Source config files not found in:")
+        print(f"        {source_config_dir}")
+        print("        Ensure repo is intact (look for wepublic_defender/config/*.json).")
+
+    # Copy/merge .claude/commands so Claude can discover commands at case root
+    commands_src = repo_root / ".claude" / "commands"
+    commands_dst = base_path / ".claude" / "commands"
+    try:
+        if commands_src.exists():
+            commands_dst.mkdir(parents=True, exist_ok=True)
+            for item in commands_src.rglob("*"):
+                if item.is_file():
+                    rel = item.relative_to(commands_src)
+                    dst_file = commands_dst / rel
+                    dst_file.parent.mkdir(parents=True, exist_ok=True)
+                    if not dst_file.exists():
+                        import shutil
+                        shutil.copy2(item, dst_file)
+                        print(f"  [COPIED] .claude/commands/{rel}")
+    except Exception as e:
+        print(f"  [WARN] Failed to copy .claude/commands: {e}")
+
+    # Create .database for state tracking (file management logs, etc.)
+    db_dir = base_path / ".database"
+    db_dir.mkdir(parents=True, exist_ok=True)
+    fm_log = db_dir / "file_management_log.md"
+    if not fm_log.exists():
+        fm_log.write_text(
+            "# File Management Log\n\n"
+            "Records of file moves, folder consolidations, and related file management actions.\n\n"
+            "Columns: timestamp | action | src | dst | notes\n\n",
+            encoding="utf-8",
+        )
+        print("  [CREATED] .database/file_management_log.md")
+
+    fm_index = db_dir / "file_management_index.json"
+    if not fm_index.exists():
+        fm_index.write_text("[]", encoding="utf-8")
+        print("  [CREATED] .database/file_management_index.json")
+
+def create_gameplan():
+    """Create GAMEPLAN.md if it doesn't exist."""
+    base_path = Path.cwd()
+    gameplan_path = base_path / "GAMEPLAN.md"
+
+    if not gameplan_path.exists():
+        template = """# Case Strategy and Game Plan
+
+## Current Status
+[Brief description of where case stands]
+
+## Immediate Next Steps
+1. [Action item]
+2. [Action item]
+3. [Action item]
+
+## Key Deadlines
+- [Date]: [Event/Deadline]
+
+## Strategic Goals
+[High-level strategic objectives]
+
+## Risks and Concerns
+[Potential issues to monitor]
+
+## Notes
+[Additional strategic notes]
+"""
+        gameplan_path.write_text(template)
+        print(f"\n[CREATED] GAMEPLAN.md")
+    else:
+        print(f"\n[EXISTS] GAMEPLAN.md")
+
+def _get_logger():
+    """Get logger, handling case where package may not be importable yet."""
+    try:
+        from wepublic_defender.logging_utils import get_logger
+        return get_logger()
+    except ImportError:
+        # Package not installed yet, return None
+        return None
+
+
+def main():
+    """Main initialization function."""
+    logger = _get_logger()
+
+    print("="*60)
+    print("LEGAL CASE DIRECTORY INITIALIZATION")
+    print("="*60)
+
+    if logger:
+        logger.info("Case init started | cwd=%s", Path.cwd())
+
+    # Create directory structure
+    created, existed = create_directory_structure()
+    if logger:
+        logger.info("Directory structure | created=%s | existed=%s", created, existed)
+
+    # Create README files
+    create_readme_files()
+    if logger:
+        logger.info("README files created")
+
+    # Create symlinks/copies for Claude
+    create_symlinks()
+    if logger:
+        logger.info("Configuration files copied/symlinked")
+
+    # Create GAMEPLAN.md
+    create_gameplan()
+    if logger:
+        logger.info("GAMEPLAN.md initialized")
+
+    print("\n" + "="*60)
+    print("INITIALIZATION COMPLETE")
+    print("="*60)
+    print("\nNext steps:")
+    print("1. Edit GAMEPLAN.md with case strategy")
+    print("2. Add case details to 01_CASE_OVERVIEW/")
+    print("3. Place new documents in 00_NEW_DOCUMENTS_INBOX/")
+    print("4. Configure API keys in .env")
+    print("5. Start Claude Code: claude-code")
+    print("\nClaude will help organize files and maintain structure.")
+    print("="*60)
+
+    if logger:
+        logger.info("Case init completed successfully")
+
+if __name__ == "__main__":
+    main()

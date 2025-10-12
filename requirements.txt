@@ -1,0 +1,24 @@
+# WePublicDefender Dependencies
+
+# Core dependencies
+openai>=1.0.0
+pydantic>=2.0.0
+python-dotenv>=1.0.0
+
+# JSON5 for settings files
+json5>=0.9.0
+
+# Rich for formatted terminal output
+rich>=13.0.0
+
+# Document processing
+python-docx>=0.8.11
+PyPDF2>=3.0.0
+pdfplumber>=0.10.0
+
+# Async support
+aiofiles>=23.0.0
+
+# Type hints
+typing-extensions>=4.0.0
+requests>=2.31.0

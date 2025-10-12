@@ -1,0 +1,61 @@
+{
+  "loggingLevel": "INFO",
+  "reviewAgentConfig": {
+    "self_review_agent": {
+      "effort": "high",
+      "models": [
+        "gpt-5",
+        "grok-4"
+      ],
+      "web_search": true
+    },
+    "drafter_agent": {
+      "effort": "high",
+      "models": [
+        "gpt-5",
+        "gpt-4o"
+      ],
+      "web_search": false
+    },
+    "citation_verifier_agent": {
+      "effort": "high",
+      "models": [
+        "gpt-5"
+      ],
+      "web_search": true
+    },
+    "final_review_agent": {
+      "effort": "high",
+      "models": [
+        "gpt-5",
+        "grok-4"
+      ],
+      "web_search": false
+    },
+    "opposing_counsel_agent": {
+      "effort": "high",
+      "models": [
+        "grok-4",
+        "gpt-5"
+      ],
+      "web_search": true
+    },
+    "strategy_agent": {
+      "effort": "high",
+      "models": [
+        "grok-4",
+        "gpt-5",
+        "gpt-5-mini"
+      ],
+      "web_search": true
+    }
+  },
+  "workflowConfig": {
+    "jurisdictionConfig": {
+      "preferred_authority_order": [],
+      "circuit": null,
+      "jurisdiction": null,
+      "court": null
+    }
+  }
+}

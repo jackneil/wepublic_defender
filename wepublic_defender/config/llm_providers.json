@@ -1,0 +1,254 @@
+{
+  "llm_providers": {
+    "openai": {
+      "name": "OpenAI",
+      "base_url": "https://api.openai.com/v1",
+      "api_key_env_var": "OPENAI_API_KEY",
+      "client_type": "openai",
+      "supported_features": {
+        "chat_completions": true,
+        "file_upload": true,
+        "vision": true,
+        "web_search": false,
+        "service_tiers": ["auto", "flex", "standard", "priority"],
+        "supported_formats": ["jpg", "jpeg", "png", "pdf"]
+      },
+      "priority_multiplier": 2.0,
+      "priority_note": "OpenAI Priority Processing pricing is now published. Use priority_tier pricing in model configs."
+    },
+    "xai": {
+      "name": "xAI Grok",
+      "base_url": "https://api.x.ai/v1",
+      "api_key_env_var": "XAI_API_KEY",
+      "client_type": "openai",
+      "supported_features": {
+        "chat_completions": true,
+        "file_upload": true,
+        "vision": true,
+        "web_search": true,
+        "live_search_cost_per_source": 0.025,
+        "supported_formats": ["jpg", "jpeg", "png", "pdf", "docx", "txt", "md", "csv"],
+        "max_file_size_mb": 30,
+        "max_images_per_request": 10
+      }
+    }
+  },
+
+  "timeoutConfig": {
+    "globalDefault": 120,
+    "multipliers": {
+      "file_search": 1.5,
+      "batch_processing": 1.3,
+      "retry_attempt_2": 1.5,
+      "retry_attempt_3": 2.0,
+      "service_tier": {
+        "flex": 360.0,
+        "priority": 0.67,
+        "standard": 1.0,
+        "auto": 1.0
+      }
+    },
+    "maxTimeout": 43200
+  },
+
+  "modelConfigurations": {
+    "gpt-5": {
+      "provider": "openai",
+      "api_type": "openai_responses",
+      "model_name": "gpt-5",
+      "max_tokens_param": "max_completion_tokens",
+      "supports_temperature": false,
+      "max_input_tokens": 272000,
+      "max_output_tokens": 128000,
+      "total_context_tokens": 400000,
+      "temperature": 0.01,
+      "input_token_ppm": 1.25,
+      "input_token_cached_ppm": 0.125,
+      "output_token_ppm": 10.0,
+      "cached_discount_percent": 90.0,
+      "priority_tier": {
+        "input_token_ppm": 2.50,
+        "input_token_cached_ppm": 0.250,
+        "output_token_ppm": 20.0
+      },
+      "supported_features": {
+        "reasoning": true,
+        "vision": true,
+        "file_upload": true,
+        "semantic_caching": true
+      },
+      "timeouts": {
+        "default": 90,
+        "with_web_search": 180
+      },
+      "notes": "GPT-5 with 90% cache discount. Supports 272K input / 128K output tokens. Priority tier: 2x standard pricing."
+    },
+    "gpt-5-mini": {
+      "provider": "openai",
+      "api_type": "openai_responses",
+      "model_name": "gpt-5-mini",
+      "max_tokens_param": "max_completion_tokens",
+      "supports_temperature": false,
+      "max_input_tokens": 272000,
+      "max_output_tokens": 128000,
+      "total_context_tokens": 400000,
+      "temperature": 0.01,
+      "input_token_ppm": 0.25,
+      "input_token_cached_ppm": 0.025,
+      "output_token_ppm": 2.0,
+      "cached_discount_percent": 90.0,
+      "priority_tier": {
+        "input_token_ppm": 0.45,
+        "input_token_cached_ppm": 0.045,
+        "output_token_ppm": 3.60
+      },
+      "supported_features": {
+        "reasoning": true,
+        "vision": true,
+        "file_upload": true,
+        "semantic_caching": true
+      },
+      "timeouts": {
+        "default": 45,
+        "with_web_search": 90
+      },
+      "notes": "Cost-efficient variant. Performance decreases at longer context lengths. Priority tier: 1.8x standard pricing."
+    },
+    "gpt-5-nano": {
+      "provider": "openai",
+      "api_type": "openai_responses",
+      "model_name": "gpt-5-nano",
+      "max_tokens_param": "max_completion_tokens",
+      "supports_temperature": false,
+      "max_input_tokens": 272000,
+      "max_output_tokens": 128000,
+      "total_context_tokens": 400000,
+      "temperature": 0.01,
+      "input_token_ppm": 0.05,
+      "input_token_cached_ppm": 0.005,
+      "output_token_ppm": 0.40,
+      "cached_discount_percent": 90.0,
+      "priority_tier": {
+        "input_token_ppm": 0.10,
+        "input_token_cached_ppm": 0.010,
+        "output_token_ppm": 0.80
+      },
+      "supported_features": {
+        "reasoning": true,
+        "vision": true,
+        "file_upload": true,
+        "semantic_caching": true
+      },
+      "timeouts": {
+        "default": 30,
+        "with_web_search": 60
+      },
+      "notes": "Most cost-efficient GPT-5 variant. Suitable for simpler tasks. Priority tier: 2x standard pricing."
+    },
+    "gpt-4o": {
+      "provider": "openai",
+      "api_type": "openai_responses",
+      "model_name": "gpt-4o",
+      "max_tokens_param": "max_tokens",
+      "max_input_tokens": 128000,
+      "max_output_tokens": 16384,
+      "total_context_tokens": 128000,
+      "temperature": 0.01,
+      "input_token_ppm": 2.50,
+      "input_token_cached_ppm": 1.25,
+      "output_token_ppm": 10.0,
+      "cached_discount_percent": 50.0,
+      "priority_tier": {
+        "input_token_ppm": 5.00,
+        "input_token_cached_ppm": 2.50,
+        "output_token_ppm": 20.0
+      },
+      "supported_features": {
+        "reasoning": false,
+        "vision": true,
+        "file_upload": true
+      },
+      "timeouts": {
+        "default": 90,
+        "with_web_search": 180
+      },
+      "notes": "GPT-4o with multimodal capabilities. Smaller context than GPT-5. Priority tier: 2x standard pricing."
+    },
+    "grok-4": {
+      "provider": "xai",
+      "api_type": "xai_native",
+      "model_name": "grok-4",
+      "max_tokens_param": "max_output_tokens",
+      "max_input_tokens": 256000,
+      "max_output_tokens": 100000,
+      "total_context_tokens": 256000,
+      "temperature": 0.01,
+      "input_token_ppm": 3.0,
+      "input_token_cached_ppm": 0.75,
+      "output_token_ppm": 15.0,
+      "cached_discount_percent": 75.0,
+      "supported_features": {
+        "reasoning": false,
+        "vision": true,
+        "web_search": true,
+        "file_upload": true
+      },
+      "timeouts": {
+        "default": 75,
+        "with_web_search": 150
+      },
+      "notes": "Grok 4 with 256K context. Supports web search at $0.025 per source."
+    },
+    "grok-4-fast": {
+      "provider": "xai",
+      "api_type": "xai_native",
+      "model_name": "grok-4-fast-reasoning",
+      "max_tokens_param": "max_output_tokens",
+      "max_input_tokens": 2000000,
+      "max_output_tokens": 100000,
+      "total_context_tokens": 2000000,
+      "temperature": 0.01,
+      "input_token_ppm": 0.20,
+      "input_token_cached_ppm": 0.05,
+      "output_token_ppm": 0.50,
+      "cached_discount_percent": 75.0,
+      "tiered_pricing": {
+        "threshold_tokens": 128000,
+        "under_threshold": {
+          "input_token_ppm": 0.20,
+          "input_token_cached_ppm": 0.05,
+          "output_token_ppm": 0.50
+        },
+        "over_threshold": {
+          "input_token_ppm": 0.50,
+          "input_token_cached_ppm": 0.125,
+          "output_token_ppm": 1.00
+        }
+      },
+      "supported_features": {
+        "reasoning": true,
+        "vision": true,
+        "web_search": true,
+        "file_upload": true
+      },
+      "timeouts": {
+        "default": 45,
+        "with_web_search": 90
+      },
+      "notes": "Cost-efficient Grok with massive 2M token context window. Unified reasoning/non-reasoning architecture. Tiered pricing: cheaper under 128K tokens."
+    }
+  },
+
+  "_schema_version": "1.1",
+  "_last_updated": "2025-10-11",
+  "_notes": [
+    "All pricing in USD per million tokens (ppm)",
+    "OpenAI Priority Processing pricing now published at https://openai.com/api-priority-processing/",
+    "Priority tier pricing available in priority_tier field for each OpenAI model",
+    "GPT-5 family has exact 2.0x multiplier for priority tier across all variants",
+    "Grok-4-fast has tiered pricing: cheaper under 128K tokens, higher cost over 128K",
+    "Grok web search cost is $0.025 per source (not per 1000 sources)",
+    "Cached token discounts: GPT-5 (90%), Grok (75%)",
+    "All token limits verified from official 2025 API documentation"
+  ]
+}

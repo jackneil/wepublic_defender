@@ -1,0 +1,17 @@
+[
+  {
+    "citation": "Smith v. Jones, 450 S.E.2d 123 (S.C. 2020)",
+    "case_name": "Smith v. Jones",
+    "argument": "Establishes the elements for breach of contract under South Carolina law.",
+    "context_snippet": "Plaintiff alleges Defendant breached by failing to perform per Section 3.1.",
+    "applies_to_sections": ["COUNT I – Breach of Contract"]
+  },
+  {
+    "citation": "ACME Corp. v. Doe, 999 F.3d 456 (4th Cir. 2021)",
+    "case_name": "ACME Corp. v. Doe",
+    "argument": "Fourth Circuit standard for preliminary injunction likelihood of success.",
+    "context_snippet": "Seeking TRO; we must show likelihood of success on the merits.",
+    "applies_to_sections": ["MOTION FOR TRO"]
+  }
+]
+
