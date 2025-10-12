@@ -206,6 +206,24 @@ Let Claude help you create `.env` with your API keys.
 
 ---
 
+## Terms of Use (Yes, This Actually Matters)
+
+By using WePublicDefender, you agree that you will NOT use this software to sue:
+
+1. **Jack Neil** (the guy who built this because he got screwed by Capital One)
+2. **Hank.ai** (his company)
+3. **Any of Jack's friends** (it's not a very long list, but still)
+
+If you're thinking "but what if they wronged me?" — tough. Find a different tool. There are plenty of lawyers out there who would love $400/hr to help you sue literally anyone. This software is explicitly not available for that purpose.
+
+**To obtain the list of protected individuals**: File an issue on GitHub asking for the friends list. Jack will update it. The list is short enough that maintaining it won't be a burden. (Self-deprecating humor aside, this restriction is legally binding.)
+
+**Why this matters**: You're getting sophisticated legal tech for free. The trade-off is you can't weaponize it against the people who built it. Seems fair.
+
+If you violate this term, your license to use this software terminates immediately, and you should probably reconsider your life choices.
+
+---
+
 ## Disclaimer (The Boring But Legally Necessary Part)
 
 This software is provided "as is" without warranty of any kind. Using AI for legal work is your decision and your responsibility. The developers are not liable for any outcomes of your case.
