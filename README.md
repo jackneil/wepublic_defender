@@ -1,69 +1,75 @@
 # WePublicDefender
 
-Welcome. We’re glad you’re here to use WePublicDefender — an LLM‑guided case management and pro se assistance helper.
+So you got screwed by a corporation and can't afford a $400/hr lawyer. Welcome to the club.
 
-Important: Use at your own risk. This is AI, not a lawyer. Always verify facts, law, and local rules before filing.
+WePublicDefender is an LLM-guided case management system that helps you fight back pro se (that's Latin for "you're on your own, buddy"). It uses adversarial AI review to catch the stupid mistakes that would get your case thrown out.
 
-## Step 0 - Get Ready (One-Time)
+**Reality Check**: This is AI-powered legal research and document review. It is NOT a lawyer. It WILL make mistakes. The court doesn't care that "the AI told me to do it." Verify everything before you file, or enjoy explaining to the judge why you didn't.
 
-- Get Claude (Anthropic) with access to the Claude Code CLI:
-  - Plans: [Anthropic Pricing](https://www.anthropic.com/pricing)
-  - Which plan? We recommend Claude Max 5x for most users. If you have large or complex matters, consider Claude Max 20x. You can try Claude Pro, but you may run out of usage quickly. See pricing details on the official page.
-  - Claude (web): [claude.ai](https://claude.ai/)
-  - Install the Claude Code CLI (you’ll paste commands into it next): see [Anthropic Docs](https://docs.anthropic.com/claude)
+## Step 0 - Get Your Shit Together (One-Time Setup)
 
-What “CLI” means and how you’ll use it
-- CLI = Command Line Interface — a small program you run in your computer’s Terminal or Command Prompt.
-- You will open a terminal, run `claude`, and paste the prompts in Steps 1–3. Claude will do the setup and guide you.
-- Open Terminal/Command Prompt:
-  - Windows: Press Start, type “PowerShell” (or “Command Prompt”), press Enter.
-  - macOS: Open Applications → Utilities → Terminal.
-  - Linux: Open your distro’s Terminal app.
+You'll need Claude Code CLI and some API keys. Yes, this costs money. No, it's not free. But it's cheaper than a lawyer, and at least the AI doesn't bill you for "thinking about your case" while taking a dump.
 
-Install Claude Code CLI (simple)
-- Go to: [Anthropic Docs](https://docs.anthropic.com/claude)
-- Find the Claude Code CLI section, choose your operating system, and follow the install steps.
-- After installing, in your terminal run:
-  - `claude --version` (should print a version)
-  - `claude login` (sign in to your Anthropic account)
+### Get Claude Code CLI
 
-Note: You do NOT need to manually install Git, Python, or Conda. In Step 1, Claude will check for these and install Miniconda if needed.
+- Plans: [Anthropic Pricing](https://www.anthropic.com/pricing)
+- **Which plan?** Claude Max 5x (~$100/mo) works for most cases. Got a dumpster fire of a case with 500 pages of discovery? Get Max 20x (~$200/mo). Claude Pro might work but you'll burn through it fast.
+- Install: [Anthropic Docs](https://docs.anthropic.com/claude)
 
-### Open the Terminal in Your Case Folder (Before Step 1)
+**What's a CLI and why are you making me use a terminal like it's 1995?**
 
-Put all the files for your case into a single folder on your computer (for example, Desktop/MyCase). Then open a terminal in that exact folder:
+CLI = Command Line Interface. It's that black window with text that makes you feel like a hacker in a bad movie. You'll use it because GUIs are for people with venture capital funding.
 
-- Windows
-  - Open File Explorer and go to your case folder.
-  - In Windows 11: right‑click inside the folder background and click “Open in Terminal”.
-  - Or click the address bar, type `cmd`, and press Enter.
-  - A window opens that shows your folder in the prompt, e.g., `C:\Users\You\Desktop\MyCase>`.
+How to open this ancient technology:
+- **Windows**: Press Start, type "PowerShell", press Enter. (Yes, really. No, you can't just double-click something.)
+- **macOS**: Applications → Utilities → Terminal
+- **Linux**: If you're on Linux you already know what a terminal is, quit wasting time.
 
-- macOS
-  - Create/open your case folder in Finder (for example, Desktop/MyCase).
-  - Open Terminal: press Command+Space, type “Terminal”, press Enter.
-  - Type `cd ` (with a space), then drag the folder from Finder into the Terminal window. Press Enter.
-  - The prompt will now end with `/Desktop/MyCase`.
+After installing Claude CLI:
+```bash
+claude --version  # should print a version, not an error
+claude login      # sign in to your Anthropic account
+```
 
-- Linux
-  - Open your file manager, go to the case folder.
-  - Right‑click the background → “Open in Terminal”. If you don’t see that, open your Terminal app and type `cd `, then paste or drag the folder path and press Enter.
- - The prompt should show your case folder path.
+**Note**: You don't need to manually install Git, Python, or Conda. Claude will do it in Step 1. This is the 2020s, let the robots do the boring stuff.
 
-Start Claude Code here:
-- Type `claude` and press Enter. If it asks you to sign in, follow the prompt.
-- Leave this window open. You will paste the next steps into this Claude window.
+### Open Terminal in Your Case Folder
 
-API accounts you'll need (we'll collect keys in Step 1):
-- OpenAI: [Create API Key](https://platform.openai.com/api-keys) • [Quickstart](https://platform.openai.com/docs/quickstart)
-- xAI Grok: [Console](https://console.x.ai/) • [Docs](https://docs.x.ai/)
-- Optional CourtListener: [Register](https://www.courtlistener.com/register/) • [API](https://www.courtlistener.com/api/)
+Make a folder for your case (like `Desktop/CapitalOneScrewedMe`). Put all your case files there. Now open a terminal IN that folder:
 
-Tip: Using both OpenAI and Grok improves cross‑checking and adversarial analysis.
+**Windows**
+1. Open File Explorer, go to your case folder
+2. Windows 11: Right-click → "Open in Terminal"
+3. Older Windows: Click the address bar, type `cmd`, press Enter
+4. You should see `C:\Users\You\Desktop\CapitalOneScrewedMe>` or similar
 
-## Step 1 - Central Setup (Paste into Claude Code CLI)
+**macOS**
+1. Open Terminal (Command+Space, type "Terminal")
+2. Type `cd ` (with a space at the end)
+3. Drag your case folder into the Terminal window
+4. Press Enter
+5. Prompt should end with your folder name
 
-In that same terminal window, type `claude` (if it's not already running). Then copy everything between the lines and paste into the Claude Code CLI. Use this repo URL: https://github.com/jackneil/wepublic_defender.git
+**Linux**
+1. Right-click in your file manager → "Open in Terminal"
+2. Or use `cd /path/to/case` like an adult
+
+Now run `claude` and leave the window open. You'll paste commands into it next.
+
+### API Keys You'll Need
+
+WePublicDefender uses multiple LLMs to double-check each other's work. Why? Because one AI can be confidently wrong. Two AIs arguing reduces the chance you file something stupid.
+
+Get these keys:
+- **OpenAI**: [Create API Key](https://platform.openai.com/api-keys) • [Quickstart](https://platform.openai.com/docs/quickstart)
+- **xAI Grok**: [Console](https://console.x.ai/) • [Docs](https://docs.x.ai/)
+- **CourtListener** (optional but recommended): [Register](https://www.courtlistener.com/register/) • [API](https://www.courtlistener.com/api/)
+
+Yes, these cost money. Budget $20-50 for a typical case depending on how much you run the pipeline. Still cheaper than one hour with a lawyer who'll bill you to read their own emails.
+
+## Step 1 - Central Setup (Copy-Paste This Into Claude)
+
+In your terminal (in your case folder), type `claude` if it's not running. Then copy EVERYTHING between the backticks below and paste it into Claude. It'll do the rest.
 
 ```
 You are my coding assistant. Please perform a central setup for WePublicDefender that I can reuse across cases.
@@ -90,7 +96,7 @@ You are my coding assistant. Please perform a central setup for WePublicDefender
 5) Run environment check from the repo root and handle any missing tools/packages:
    - Command: wpd-check-env
 
-6) Collect my API keys and save them to a reusable template (don’t ask me to set environment variables):
+6) Collect my API keys and save them to a reusable template (don't ask me to set environment variables):
    - Show me these links to create keys if I need them:
      • OpenAI: https://platform.openai.com/api-keys
      • xAI Grok: https://console.x.ai/
@@ -122,65 +128,88 @@ You are my coding assistant. Please perform a central setup for WePublicDefender
    - Include a brief cost/usage summary and where to find outputs/logs
 ```
 
-Save the printed `ABS_REPO_PATH` — you’ll use it in the next step.
+Save the repo path it prints. You might need it later.
 
-## Where Outputs Go
+## Where Your Files End Up
 
-- Research and citation logs: `06_RESEARCH/` (e.g., `CITATIONS_LOG.md`)
-- Drafts and work product: `07_DRAFTS_AND_WORK_PRODUCT/`
-- Case plan: `GAMEPLAN.md`
-- Logs: `.wepublic_defender/logs/wpd.log`
-- Usage/cost CSV: `.wepublic_defender/usage_log.csv`
+The system creates a standard directory structure because organization is the difference between winning and getting your case dismissed for being a disorganized mess:
 
-## Troubleshooting
+- **Research & citations**: `06_RESEARCH/` (including `CITATIONS_LOG.md`)
+- **Your drafts**: `07_DRAFTS_AND_WORK_PRODUCT/`
+- **Case strategy**: `GAMEPLAN.md`
+- **System logs**: `.wepublic_defender/logs/wpd.log`
+- **What you spent**: `.wepublic_defender/usage_log.csv`
 
-- Keys missing — Ask Claude to create/update `.env` in this case folder; it will handle it.
-- Import errors (e.g., docx) — Ask Claude to repair the environment and reinstall the package; it will handle it.
-- Wrong Python/env — Ask Claude to switch to the environment it created and recheck; it will handle it.
-- What happened? — Ask Claude to show the latest `.wepublic_defender/logs/wpd.log` and explain the steps.
+## When Things Break (They Will)
 
-## Claude Plan Overview (FYI)
+- **"API key not found"** — Tell Claude to create/update `.env` in your case folder. It knows how.
+- **"ImportError: No module named docx"** — Tell Claude to fix the environment and reinstall. It'll handle it.
+- **"Wrong Python version"** — Tell Claude to switch to the wepublic_defender environment.
+- **"What the hell happened?"** — Ask Claude to show `.wepublic_defender/logs/wpd.log` and explain.
 
-| Plan | Includes CLI | Typical Price | Recommended For | Subscribe |
-| --- | --- | --- | --- | --- |
-| Max 5x (Recommended) | Yes | ~$100/mo | Most users and typical matters | [Anthropic Pricing](https://www.anthropic.com/pricing) |
-| Max 20x (Heavy Use) | Yes | ~$200/mo | Large/complex documents and heavier workloads | [Anthropic Pricing](https://www.anthropic.com/pricing) |
+The point is: **let Claude fix it**. That's what you're paying $100/mo for.
 
-Note: Names, features, and prices change. Always confirm current details on the official pricing page.
+## What This Actually Costs
+
+| Plan | CLI Access | Monthly | Who It's For |
+|------|-----------|---------|--------------|
+| Max 5x | ✓ | ~$100 | Normal cases, reasonable document volume |
+| Max 20x | ✓ | ~$200 | Document-heavy cases, complex litigation |
+
+Plus your API costs for OpenAI and Grok (budget $20-50/case for typical usage).
+
+**Perspective**: One hour of lawyer time costs more than a month of this system. One lawyer reviewing one document costs more than running the full adversarial review pipeline 10 times.
+
+**Note**: Anthropic changes plan names and prices. Check [their pricing page](https://www.anthropic.com/pricing) for current details.
 
 ---
 
-## Technical Appendix (Optional)
+## Technical Appendix (For People Who Know What They're Doing)
 
-For technical users who prefer manual commands (without Claude guiding each step):
+If you're comfortable with git and Python and don't need hand-holding:
 
-1) Clone repo and create env
-   - Windows (PowerShell)
-     - `New-Item -ItemType Directory -Path C:\Github -Force | Out-Null`
-     - `cd C:\Github`
-    - `git clone https://github.com/jackneil/wepublic_defender.git wepublic_defender` (or `git -C wepublic_defender pull`)
-     - Conda: `conda create -n wepublic_defender python=3.11 -y; conda activate wepublic_defender`
-     - Or venv: `py -3.11 -m venv .venv; .\\.venv\\Scripts\\Activate.ps1`
-     - Install: `pip install -e wepublic_defender\\`
-   - macOS/Linux (Bash)
-     - `mkdir -p ~/github && cd ~/github`
-    - `git clone https://github.com/jackneil/wepublic_defender.git wepublic_defender` (or `git -C wepublic_defender pull`)
-     - Conda: `conda create -n wepublic_defender python=3.11 -y && conda activate wepublic_defender`
-     - Or venv: `python3 -m venv .venv && source .venv/bin/activate`
-     - Install: `pip install -e wepublic_defender/`
+**1) Clone and setup environment**
 
-2) Create a case and run
-   - `cd /path/to/your/case` (create a new folder for each case)
-   - `wpd-init-case`
-   - Let Claude help you create `.env` at the case root and persist preferences.
-   - `wpd-check-env`
-   - `wpd-run-agent --agent self_review --file "07_DRAFTS_AND_WORK_PRODUCT/FILE.md"`
+Windows (PowerShell):
+```powershell
+New-Item -ItemType Directory -Path C:\Github -Force | Out-Null
+cd C:\Github
+git clone https://github.com/jackneil/wepublic_defender.git wepublic_defender
+conda create -n wepublic_defender python=3.11 -y
+conda activate wepublic_defender
+pip install -e wepublic_defender\
+```
 
-Links
+macOS/Linux:
+```bash
+mkdir -p ~/github && cd ~/github
+git clone https://github.com/jackneil/wepublic_defender.git wepublic_defender
+conda create -n wepublic_defender python=3.11 -y && conda activate wepublic_defender
+pip install -e wepublic_defender/
+```
+
+**2) Initialize a case and run reviews**
+
+```bash
+cd /path/to/your/case
+wpd-init-case
+wpd-check-env
+wpd-run-agent --agent self_review --file "07_DRAFTS_AND_WORK_PRODUCT/motion.md"
+```
+
+Let Claude help you create `.env` with your API keys.
+
+**Links**
 - OpenAI Keys: [platform.openai.com/api-keys](https://platform.openai.com/api-keys)
-- xAI Grok Console: [console.x.ai](https://console.x.ai/)
-- CourtListener API: [courtlistener.com/api](https://www.courtlistener.com/api/)
+- xAI Grok: [console.x.ai](https://console.x.ai/)
+- CourtListener: [courtlistener.com/api](https://www.courtlistener.com/api/)
 
+---
 
+## Disclaimer (The Boring But Legally Necessary Part)
 
+This software is provided "as is" without warranty of any kind. Using AI for legal work is your decision and your responsibility. The developers are not liable for any outcomes of your case.
 
+This is not legal advice. This is not a lawyer. This is a tool that helps you research and review your work before filing. The court will hold you to the same standards as a licensed attorney. If you file garbage, you'll get sanctioned, and "the AI did it" is not a defense.
+
+**When in doubt, consult a real lawyer.** Yes, they're expensive. Yes, it sucks. But getting your case dismissed because you screwed up procedure sucks more.
