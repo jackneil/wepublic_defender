@@ -21,7 +21,7 @@ setup(
     long_description_content_type="text/markdown",
     author="Jack",
     author_email="",
-    url="https://github.com/yourusername/wepublic_defender",
+    url="https://github.com/jackneil/wepublic_defender",
     packages=find_packages(exclude=["tests", "scripts", ".claude"]),
     package_data={
         "wepublic_defender": [

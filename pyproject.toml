@@ -45,9 +45,9 @@ dev = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/yourusername/wepublic_defender"
-Documentation = "https://github.com/yourusername/wepublic_defender"
-Repository = "https://github.com/yourusername/wepublic_defender"
+Homepage = "https://github.com/jackneil/wepublic_defender"
+Documentation = "https://github.com/jackneil/wepublic_defender"
+Repository = "https://github.com/jackneil/wepublic_defender"
 
 [tool.setuptools]
 packages = [

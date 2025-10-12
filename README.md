@@ -8,7 +8,7 @@ Important: Use at your own risk. This is AI, not a lawyer. Always verify facts, 
 
 - Get Claude (Anthropic) with access to the Claude Code CLI:
   - Plans: [Anthropic Pricing](https://www.anthropic.com/pricing)
-  - Which plan? We recommend Claude Pro 5× for most users. If you have large or complex matters, consider Claude Pro 20×. See pricing details on the official page.
+  - Which plan? We recommend Claude Max 5x for most users. If you have large or complex matters, consider Claude Max 20x. You can try Claude Pro, but you may run out of usage quickly. See pricing details on the official page.
   - Claude (web): [claude.ai](https://claude.ai/)
   - Install the Claude Code CLI (you’ll paste commands into it next): see [Anthropic Docs](https://docs.anthropic.com/claude)
 
@@ -63,7 +63,7 @@ Tip: Using both OpenAI and Grok improves cross‑checking and adversarial analys
 
 ## Step 1 - Central Setup (Paste into Claude Code CLI)
 
-In that same terminal window, type `claude` (if it’s not already running). Then copy everything between the lines and paste into the Claude Code CLI. Replace `<REPO_URL>` with your repo URL (for example, `https://github.com/ORG/wepublic_defender.git`).
+In that same terminal window, type `claude` (if it's not already running). Then copy everything between the lines and paste into the Claude Code CLI. Use this repo URL: https://github.com/jackneil/wepublic_defender.git
 
 ```
 You are my coding assistant. Please perform a central setup for WePublicDefender that I can reuse across cases.
@@ -79,9 +79,9 @@ You are my coding assistant. Please perform a central setup for WePublicDefender
    - Print versions for confirmation.
 
 3) Clone or update the repository:
-   - Repo URL: <REPO_URL>
+   - Repo URL: https://github.com/jackneil/wepublic_defender.git
    - Target: <BASE_DIR>/wepublic_defender
-   - If missing: git clone <REPO_URL> <BASE_DIR>/wepublic_defender
+   - If missing: git clone https://github.com/jackneil/wepublic_defender.git <BASE_DIR>/wepublic_defender
    - If present: pull latest main
 
 4) Create a Python environment named "wepublic_defender" (Conda preferred; install Miniconda first if needed). If Conda is not possible, use a local venv in the repo. Then install the package:
@@ -100,64 +100,29 @@ You are my coding assistant. Please perform a central setup for WePublicDefender
      XAI_API_KEY=...
      COURTLISTENER_TOKEN=... (optional)
 
-7) Print exactly one line for me to copy for future steps:
-   ABS_REPO_PATH=<absolute path to /wepublic_defender with forward slashes>
+7) Initialize THIS case (the folder where my terminal is open) and prepare guidance:
+   - Run: wpd-init-case in the current working directory (do not create a new folder)
+   - Ensure standard directories exist and .wepublic_defender/ is created
+   - Copy CLAUDE.md and LEGAL_WORK_PROTOCOL.md into this case folder
+   - Copy default per-case settings into .wepublic_defender/
+   - If a .env is missing here, help me create it by reusing the keys you collected
+
+8) Tell me clearly what to do next, pointing to CLAUDE.md:
+   - "Open CLAUDE.md in this folder and follow it step-by-step to organize your case files (it includes the init/checklists). When done, come back here to run reviews."
+
+9) Persist paths so I don't have to copy anything:
+   - Store the absolute path to the created environment's Python executable and env name
+   - Store the central repo path you cloned
+   - Save these to .wepublic_defender/env_info.json in this case folder with keys:
+     { "python_exe": "...", "conda_env": "...", "repo_path": "..." }
+
+10) Offer to run common reviews now (do NOT show me CLI commands):
+   - Ask me in plain language which to run first (Self Review on my main draft, Opposing Counsel attack, or Citation Verification)
+   - You run the chosen review(s) for me and summarize results in plain language
+   - Include a brief cost/usage summary and where to find outputs/logs
 ```
 
 Save the printed `ABS_REPO_PATH` — you’ll use it in the next step.
-
-## Step 2 - Create a Case Folder (Paste into Claude Code CLI)
-
-Make sure your terminal is “in” your case folder (see the section above), then paste this:
-
-```
-Use my central install at: ABS_REPO_PATH=<paste the line from Step 1>
-
-1) In this case folder, initialize WePublicDefender and standard directories:
-   - Run: wpd-init-case
-   - Ensure the following exist:
-     00_NEW_DOCUMENTS_INBOX/
-     06_RESEARCH/
-     07_DRAFTS_AND_WORK_PRODUCT/
-     .wepublic_defender/
-     .wepublic_defender/legal_review_settings.json
-     .wepublic_defender/logs/
-     GAMEPLAN.md
-
-2) If a .env doesn’t exist here, help me create one by reusing my central keys (don’t teach env vars; just guide me and write the file).
-
-3) Ask my preferences and persist them into .wepublic_defender/legal_review_settings.json:
-   - Jurisdiction, court, circuit
-   - Preferred models per agent (OpenAI, Grok, or both)
-   - Default web_search on/off
-
-4) Sanity check and print a short summary of keys found, models available, and config paths:
-   - Run: wpd-check-env
-```
-
-## Step 3 — Run Reviews (Paste into Claude Code CLI)
-
-```
-I’ve placed documents in 07_DRAFTS_AND_WORK_PRODUCT/ and/or 00_NEW_DOCUMENTS_INBOX/.
-Show me copy/paste commands for:
-
-1) Self review (single file):
-   wpd-run-agent --agent self_review --file "07_DRAFTS_AND_WORK_PRODUCT/FILE.md"
-
-2) Opposing counsel attack (single file):
-   wpd-run-agent --agent opposing_counsel --file "07_DRAFTS_AND_WORK_PRODUCT/FILE.md"
-
-3) Citation verification (batch JSON with many citations):
-   wpd-run-agent --agent citation_verify --file "06_RESEARCH/batch_citations.json" --web-search
-
-4) Run both providers for redundancy (OpenAI + Grok):
-   wpd-run-agent --agent self_review --file "07_DRAFTS_AND_WORK_PRODUCT/FILE.md" --run-both
-
-5) Optional per‑run overrides:
-   --model gpt-5-mini | grok-4-fast  --service-tier auto  --effort medium  --save-choice
-
-Also show where outputs/logs will be and how to view costs.
-```
 
 ## Where Outputs Go
 
@@ -169,17 +134,17 @@ Also show where outputs/logs will be and how to view costs.
 
 ## Troubleshooting
 
-- Keys missing — Claude should help you create `.env` at the case root. Then run `wpd-check-env`.
-- Import errors (e.g., docx) - Ask Claude to reinstall: `pip install -e ABS_REPO_PATH`.
-- Wrong Python/env — Ask Claude to activate the env from Step 1, then run `wpd-check-env`.
-- What happened? — Open `.wepublic_defender/logs/wpd.log` for step‑by‑step trace.
+- Keys missing — Ask Claude to create/update `.env` in this case folder; it will handle it.
+- Import errors (e.g., docx) — Ask Claude to repair the environment and reinstall the package; it will handle it.
+- Wrong Python/env — Ask Claude to switch to the environment it created and recheck; it will handle it.
+- What happened? — Ask Claude to show the latest `.wepublic_defender/logs/wpd.log` and explain the steps.
 
 ## Claude Plan Overview (FYI)
 
 | Plan | Includes CLI | Typical Price | Recommended For | Subscribe |
 | --- | --- | --- | --- | --- |
-| Pro 5× (Recommended) | Yes | ~$100/mo | Most users and typical matters | [Anthropic Pricing](https://www.anthropic.com/pricing) |
-| Pro 20× (Heavy Use) | Yes | ~$200/mo | Large/complex documents and heavier workloads | [Anthropic Pricing](https://www.anthropic.com/pricing) |
+| Max 5x (Recommended) | Yes | ~$100/mo | Most users and typical matters | [Anthropic Pricing](https://www.anthropic.com/pricing) |
+| Max 20x (Heavy Use) | Yes | ~$200/mo | Large/complex documents and heavier workloads | [Anthropic Pricing](https://www.anthropic.com/pricing) |
 
 Note: Names, features, and prices change. Always confirm current details on the official pricing page.
 
@@ -193,13 +158,13 @@ For technical users who prefer manual commands (without Claude guiding each step
    - Windows (PowerShell)
      - `New-Item -ItemType Directory -Path C:\Github -Force | Out-Null`
      - `cd C:\Github`
-     - `git clone <REPO_URL> wepublic_defender` (or `git -C wepublic_defender pull`)
+    - `git clone https://github.com/jackneil/wepublic_defender.git wepublic_defender` (or `git -C wepublic_defender pull`)
      - Conda: `conda create -n wepublic_defender python=3.11 -y; conda activate wepublic_defender`
      - Or venv: `py -3.11 -m venv .venv; .\\.venv\\Scripts\\Activate.ps1`
      - Install: `pip install -e wepublic_defender\\`
    - macOS/Linux (Bash)
      - `mkdir -p ~/github && cd ~/github`
-     - `git clone <REPO_URL> wepublic_defender` (or `git -C wepublic_defender pull`)
+    - `git clone https://github.com/jackneil/wepublic_defender.git wepublic_defender` (or `git -C wepublic_defender pull`)
      - Conda: `conda create -n wepublic_defender python=3.11 -y && conda activate wepublic_defender`
      - Or venv: `python3 -m venv .venv && source .venv/bin/activate`
      - Install: `pip install -e wepublic_defender/`
@@ -207,7 +172,7 @@ For technical users who prefer manual commands (without Claude guiding each step
 2) Create a case and run
    - `cd /path/to/your/case` (create a new folder for each case)
    - `wpd-init-case`
-   - Let Claude (Step 2) help you create `.env` at the case root and persist preferences.
+   - Let Claude help you create `.env` at the case root and persist preferences.
    - `wpd-check-env`
    - `wpd-run-agent --agent self_review --file "07_DRAFTS_AND_WORK_PRODUCT/FILE.md"`
 
@@ -215,3 +180,7 @@ Links
 - OpenAI Keys: [platform.openai.com/api-keys](https://platform.openai.com/api-keys)
 - xAI Grok Console: [console.x.ai](https://console.x.ai/)
 - CourtListener API: [courtlistener.com/api](https://www.courtlistener.com/api/)
+
+
+
+

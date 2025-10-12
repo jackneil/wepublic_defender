@@ -37,6 +37,17 @@ Example result: `C:/Users/you/miniconda3/envs/wepublic_defender/python.exe`
 
 NEVER use bare `python` or `python3` - always use the full explicit path with `-m` flag.
 
+### Environment Path Source (Case-Aware)
+
+- First, look for `.wepublic_defender/env_info.json` in the current case folder.
+  - If present, load and use:
+    - `python_exe`: absolute path to the environment’s Python
+    - `conda_env`: environment name (if applicable)
+    - `repo_path`: absolute path to the central wepublic_defender repo clone
+  - Validate `python_exe` exists. If missing or invalid, re-detect the path and refresh the JSON.
+- If the file does not exist, detect `python_exe` as above, then create `.wepublic_defender/env_info.json` with the discovered values. Do not ask the user to copy/paste paths.
+- Always use `python_exe` from this file for all subsequent `-m wepublic_defender...` calls in this session.
+
 ## Environment Check (CRITICAL - Check on First Interaction)
 
 **Before doing any work, verify the Python environment is properly configured:**
@@ -52,6 +63,10 @@ NEVER use bare `python` or `python3` - always use the full explicit path with `-
 - Warn user about missing packages or incorrect environment
 - Recommend creating dedicated environment (see setup section below)
 - DO NOT proceed with AI-powered operations if environment is broken
+
+Interaction style for non-technical users
+- Do not ask users to run commands. Ask what they want to do in plain language, then execute the necessary commands yourself.
+- Summarize what you did, show where outputs/logs are, and provide a brief cost/usage summary.
 
 ### First Run: Environment Setup (If needed)
 
@@ -421,8 +436,27 @@ print(defender.get_detailed_cost_report())
 2. **Research** - Perform extensive web search on relevant legal issues
 3. **Draft** - Create initial document draft in 07_DRAFTS_AND_WORK_PRODUCT/
 4. **Review** - Invoke wepublic_defender for adversarial multi-AI review
-5. **Refine** - Address issues found by adversarial review
-6. **Finalize** - Move approved document to appropriate directory
+5. **POST-REVIEW DECISION POINT** - **CRITICAL: DO NOT SKIP THIS STEP**
+   - **When LLMs identify concerns/weaknesses, DO NOT immediately accept or reject them**
+   - **MANDATORY WORKFLOW AFTER RECEIVING LLM FEEDBACK:**
+     1. **Read ALL review outputs** from `.wepublic_defender/reviews/*.json`
+     2. **If concerns require research:** Conduct research and save to `06_RESEARCH/`
+     3. **After research complete, STOP and perform critical analysis:**
+        - **ALWAYS prompt user:** "Research complete. Let's review the LLM feedback against our new findings before deciding what changes to make."
+        - Read each LLM review output (.wepublic_defender/reviews/*.json files)
+        - For each concern raised by LLMs, compare against research findings:
+          * Was the LLM concern valid? (research confirmed the weakness)
+          * Was the LLM concern invalid? (research showed our original approach was correct)
+          * Is there a middle ground? (LLM had a point, but research suggests different fix)
+        - Document your reasoning for each decision in a summary
+        - Present findings to user: "Based on research, here's my analysis of the LLM feedback: [summary of each concern and whether research supports/contradicts it]"
+     4. **Make informed decisions about what to change:**
+        - Changes to implement (LLM was right + research supports)
+        - Original approach to keep (LLM concern not supported by research)
+        - Alternative approaches (research suggests better solution than either draft or LLM suggestion)
+   - **USER REMINDER: Claude will NOT remember to do this step unless explicitly prompted. User should ask: "Let's review the LLM feedback against our research before deciding what to change."**
+6. **Refine** - Implement decided changes based on post-research analysis (NOT blind acceptance of LLM feedback)
+7. **Finalize** - Move approved document to appropriate directory
 
 ### Citation Caching Protocol
 1. Before re-verifying a case, check `06_RESEARCH/CITATIONS_LOG.md`.
