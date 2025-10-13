@@ -2,9 +2,25 @@
 
 Generate case strategy recommendations and identify next steps.
 
+## Two-Mode Architecture
+
+**Mode 1: Guidance (DEFAULT - FREE)**
+- Returns structured prompt for Claude Code to execute
+- No API costs
+- Claude Code analyzes case and generates strategy
+
+**Mode 2: External-LLM (COSTS MONEY)**
+- Calls external LLM(s) with web search enabled
+- Uses models configured in `.wepublic_defender/legal_review_settings.json`
+- Automated strategy analysis with procedural research
+
 ## Usage
 ```
+# Guidance mode (default - free)
 /strategy
+
+# External-LLM mode (costs money)
+python <path>/python.exe -m wepublic_defender.cli.run_agent --agent strategy --text "Analyze case strategy" --mode external-llm --web-search
 ```
 
 ## Process

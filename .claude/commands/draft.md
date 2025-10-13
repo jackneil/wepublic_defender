@@ -2,12 +2,25 @@
 
 Draft a legal document using AI assistance.
 
+## Two-Mode Architecture
+
+**Mode 1: Guidance (DEFAULT - FREE)**
+- Returns structured prompt for Claude Code to execute
+- No API costs
+- Claude Code does the drafting work
+
+**Mode 2: External-LLM (COSTS MONEY)**
+- Calls external LLM(s) configured in `.wepublic_defender/legal_review_settings.json`
+- If one model configured: calls that model
+- If multiple models configured: calls ALL in parallel for adversarial redundancy
+
 ## Usage
 ```
-/draft [document_type]
+# Guidance mode (default - free) - just describe what you want
 /draft Motion for Summary Judgment
-/draft Discovery Request
-/draft Response to Motion to Dismiss
+
+# External-LLM mode (costs money)
+python <path>/python.exe -m wepublic_defender.cli.run_agent --agent drafter --text "Draft a Motion to Dismiss" --mode external-llm
 ```
 
 ## Process

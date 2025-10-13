@@ -1,37 +1,6 @@
 {
   "loggingLevel": "INFO",
   "reviewAgentConfig": {
-    "self_review_agent": {
-      "effort": "high",
-      "models": [
-        "gpt-5",
-        "grok-4"
-      ],
-      "web_search": true
-    },
-    "drafter_agent": {
-      "effort": "high",
-      "models": [
-        "gpt-5",
-        "gpt-4o"
-      ],
-      "web_search": false
-    },
-    "citation_verifier_agent": {
-      "effort": "high",
-      "models": [
-        "gpt-5"
-      ],
-      "web_search": true
-    },
-    "final_review_agent": {
-      "effort": "high",
-      "models": [
-        "gpt-5",
-        "grok-4"
-      ],
-      "web_search": false
-    },
     "opposing_counsel_agent": {
       "effort": "high",
       "models": [
@@ -48,14 +17,58 @@
         "gpt-5-mini"
       ],
       "web_search": true
+    },
+    "self_review_agent": {
+      "effort": "high",
+      "models": [
+        "gpt-5",
+        "grok-4"
+      ],
+      "web_search": true
+    },
+    "organize_agent": {
+      "guidance_only": true,
+      "_comment": "organize agent ONLY operates in guidance mode - NEVER uses external APIs"
+    },
+    "final_review_agent": {
+      "effort": "high",
+      "models": [
+        "gpt-5",
+        "grok-4"
+      ],
+      "web_search": false
+    },
+    "citation_verifier_agent": {
+      "effort": "high",
+      "models": [
+        "gpt-5"
+      ],
+      "web_search": true
+    },
+    "research_agent": {
+      "effort": "high",
+      "models": [
+        "grok-4",
+        "gpt-5"
+      ],
+      "web_search": true
+    },
+    "drafter_agent": {
+      "effort": "high",
+      "models": [
+        "gpt-5",
+        "gpt-4o"
+      ],
+      "web_search": false
     }
   },
+  "_comment_mode_architecture": "All agents support TWO modes: (1) guidance (FREE - returns prompt for Claude Code to execute), (2) external-llm (COSTS MONEY - calls LLM(s) configured in 'models' list). If multiple models listed, ALL run in parallel for adversarial redundancy. Use --model flag to override and run specific model only. Default mode is 'guidance' to minimize costs.",
   "workflowConfig": {
     "jurisdictionConfig": {
-      "preferred_authority_order": [],
       "circuit": null,
-      "jurisdiction": null,
-      "court": null
+      "court": null,
+      "preferred_authority_order": [],
+      "jurisdiction": null
     }
   }
 }
