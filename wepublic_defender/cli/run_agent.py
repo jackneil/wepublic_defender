@@ -37,9 +37,16 @@ async def _amain(args: argparse.Namespace) -> int:
     wpd = WePublicDefender()
 
     def _print_result(tag: str, res: dict) -> None:
-        print(f"=== Agent Output ({tag}) ===", flush=True)
-        print(res.get("text", ""), flush=True)
-        print(flush=True)
+        # Handle guidance mode output differently
+        if res.get("mode") == "guidance":
+            print(f"=== Guidance Prompt ({tag}) ===", flush=True)
+            print("This agent returned guidance for Claude Code to execute.\n", flush=True)
+            print(res.get("prompt", ""), flush=True)
+            print(flush=True)
+        else:
+            print(f"=== Agent Output ({tag}) ===", flush=True)
+            print(res.get("text", ""), flush=True)
+            print(flush=True)
 
     # Pre-compute planned model and effort for progress display
     settings = load_review_settings()
@@ -60,8 +67,9 @@ async def _amain(args: argparse.Namespace) -> int:
     # Log agent invocation
     try:
         logger.info(
-            "Agent run started | agent=%s | file=%s | model=%s | effort=%s | web_search=%s | tier=%s | run_both=%s",
+            "Agent run started | agent=%s | mode=%s | file=%s | model=%s | effort=%s | web_search=%s | tier=%s | run_both=%s",
             args.agent,
+            args.mode,
             args.file or "text",
             planned_model or "auto",
             planned_effort or "auto",
@@ -71,6 +79,26 @@ async def _amain(args: argparse.Namespace) -> int:
         )
     except Exception:
         pass
+
+    # Handle guidance mode (no API calls, just return prompt)
+    if args.mode == "guidance":
+        try:
+            result = await wpd.call_agent(
+                args.agent,
+                content,
+                mode="guidance",
+                jurisdiction=args.jurisdiction,
+                court=args.court,
+                circuit=args.circuit,
+            )
+            if args.verbose:
+                print(f"[status] Generated guidance prompt for {args.agent}", flush=True)
+            _print_result("guidance", result)
+            print("\n[info] Guidance mode used - no API costs incurred", flush=True)
+            return 0
+        except Exception as e:
+            print(f"[error] Failed to load guidance: {e}", flush=True)
+            return 1
 
     # Heartbeat task prints periodic progress
     async def _heartbeat_loop(label: str, interval: int = 15):
@@ -129,6 +157,7 @@ async def _amain(args: argparse.Namespace) -> int:
                         wpd.call_agent(
                             args.agent,
                             content,
+                            mode=args.mode,
                             web_search=args.web_search,
                             override_model=args.model,
                             override_effort=args.effort,
@@ -141,6 +170,7 @@ async def _amain(args: argparse.Namespace) -> int:
                         wpd.call_agent(
                             args.agent,
                             content,
+                            mode=args.mode,
                             web_search=args.web_search,
                             override_model=alt_model,
                             override_effort=args.effort,
@@ -278,6 +308,7 @@ async def _amain(args: argparse.Namespace) -> int:
                 result = await wpd.call_agent(
                     args.agent,
                     content,
+                    mode=args.mode,
                     web_search=args.web_search,
                     override_model=args.model,
                     override_effort=args.effort,
@@ -396,9 +427,10 @@ def main() -> int:
     except Exception:
         pass
     ap = argparse.ArgumentParser(prog="wpd-run-agent", description="Run a WePublicDefender agent")
-    ap.add_argument("--agent", required=True, help="Agent type: strategy|drafter|self_review|citation_verify|opposing_counsel|final_review")
+    ap.add_argument("--agent", required=True, help="Agent type: strategy|drafter|self_review|citation_verify|opposing_counsel|final_review|organize|research")
     ap.add_argument("--file", help="Path to input file (markdown/text)")
     ap.add_argument("--text", help="Raw input text")
+    ap.add_argument("--mode", choices=["guidance", "external-llm"], default="guidance", help="Agent mode: guidance (FREE - returns prompt for Claude Code) or external-llm (COSTS MONEY - calls LLM(s) from settings)")
     ap.add_argument("--web-search", action="store_true", help="Force-enable web search if supported")
     ap.add_argument("--model", help="Override model key (e.g., gpt-5, gpt-4o, grok-4, grok-4-fast)")
     ap.add_argument("--run-both", action="store_true", help="Run twice using the configured model and a reasonable alternate provider model")

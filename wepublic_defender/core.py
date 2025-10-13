@@ -223,6 +223,7 @@ This format will be automatically converted to Word when ready for filing.
         self,
         agent_type: str,
         document: str,
+        mode: Literal["guidance", "external-llm"] = "guidance",
         web_search: Optional[bool] = None,
         override_model: Optional[str] = None,
         override_effort: Optional[str] = None,
@@ -234,36 +235,64 @@ This format will be automatically converted to Word when ready for filing.
         **kwargs
     ) -> Dict:
         """
-        Call a specific review agent.
+        Call a specific review agent in one of two modes.
 
-        When multiple models are configured and no override_model is specified,
-        runs all models in parallel for adversarial redundancy.
+        Modes:
+            - guidance: Returns prompt template for Claude Code (FREE - no API costs)
+            - external-llm: Calls external LLM(s) configured in settings (COSTS MONEY)
+                - If settings has one model: calls that model
+                - If settings has multiple models: calls ALL in parallel for adversarial redundancy
+                - Use --model flag to override and run specific model only
+                - Use --run-both flag to force running both models
 
         Args:
             agent_type: One of [strategy, drafter, self_review, citation_verify,
-                        opposing_counsel, final_review]
+                        opposing_counsel, final_review, organize, research]
             document: Document content to review
+            mode: Agent mode - guidance or external-llm (default: guidance)
             web_search: Override web search setting
             override_model: Run single specific model (bypasses multi-model)
             **kwargs: Additional context for prompt
 
         Returns:
-            Agent response as structured dict. If multiple models ran:
+            For guidance mode:
             {
-                "model": "first_model",       # Primary result
+                "mode": "guidance",
+                "agent": "drafter",
+                "prompt": "...",  # Guidance text for Claude Code
+                "context": {...},
+            }
+
+            For external-llm mode:
+            {
+                "mode": "external-llm",
+                "model": "gpt-5",
                 "text": "...",
                 "usage": {...},
-                "multi_model": True,
-                "alternate_results": [...]    # Other model results
+                "multi_model": true,  # If multiple models ran
+                "alternate_results": [...]  # If multiple models ran
             }
 
         Example:
             >>> defender = WePublicDefender()
-            >>> result = await defender.call_agent(
-            ...     "self_review",
-            ...     document=draft_text
-            ... )
+            >>> # Guidance mode (free)
+            >>> result = await defender.call_agent("drafter", doc, mode="guidance")
+            >>> # External LLM mode (costs money)
+            >>> result = await defender.call_agent("drafter", doc, mode="external-llm")
         """
+        # Special case: organize agent ONLY operates in guidance mode
+        if agent_type == "organize":
+            if mode != "guidance":
+                self.logger.warning(
+                    "organize agent only supports guidance mode; forcing mode=guidance"
+                )
+            return self._load_guidance(agent_type, document, **kwargs)
+
+        # Route based on mode
+        if mode == "guidance":
+            return self._load_guidance(agent_type, document, **kwargs)
+
+        # For external-llm mode, proceed with API calls
         # Get agent config from review settings
         agent_key = self._resolve_agent_key(agent_type)
         agent_config = self.review_settings.get("reviewAgentConfig", {}).get(agent_key)
@@ -640,6 +669,88 @@ This format will be automatically converted to Word when ready for filing.
                 pass
 
         return out
+
+    def _load_guidance(
+        self,
+        agent_type: str,
+        document: str,
+        **kwargs
+    ) -> Dict:
+        """
+        Load and process guidance prompt template for Claude Code.
+
+        Args:
+            agent_type: Agent to get guidance for
+            document: Document content to inject into template
+            **kwargs: Additional context variables for template
+
+        Returns:
+            Dict with guidance prompt and metadata
+        """
+        # Map agent type to guidance file
+        guidance_file = f"{agent_type}_guidance.md"
+
+        # Get package guidance_prompts directory
+        package_dir = Path(__file__).parent
+        guidance_path = package_dir / "guidance_prompts" / guidance_file
+
+        if not guidance_path.exists():
+            raise FileNotFoundError(
+                f"Guidance file not found: {guidance_path}\n"
+                f"Available agents: strategy, drafter, self_review, citation_verify, "
+                f"opposing_counsel, final_review, organize, research"
+            )
+
+        # Load guidance template
+        try:
+            guidance_text = guidance_path.read_text(encoding="utf-8")
+        except Exception as e:
+            raise IOError(f"Failed to read guidance file {guidance_path}: {e}")
+
+        # Build context for template variables
+        context = {}
+
+        # Get jurisdiction context from settings
+        wf = self.review_settings.get("workflowConfig", {})
+        jcfg = wf.get("jurisdictionConfig", {}) or {}
+
+        context["jurisdiction"] = kwargs.get("jurisdiction") or jcfg.get("jurisdiction", "South Carolina")
+        context["court"] = kwargs.get("court") or jcfg.get("court", "United States District Court")
+        context["circuit"] = kwargs.get("circuit") or jcfg.get("circuit", "Fourth Circuit")
+
+        # Document content
+        context["document_content"] = document
+
+        # Agent-specific context
+        context["document_type"] = kwargs.get("document_type", "Legal Document")
+        context["deadline"] = kwargs.get("deadline", "[Deadline not specified]")
+        context["case_name"] = kwargs.get("case_name", "[Case name not specified]")
+        context["opposing_party"] = kwargs.get("opposing_party", "Opposing Party")
+        context["our_claims"] = kwargs.get("our_claims", "[Claims not specified]")
+        context["their_likely_defenses"] = kwargs.get("their_likely_defenses", "[Defenses not specified]")
+
+        # Organize-specific context
+        context["inbox_files"] = kwargs.get("inbox_files", "[No files listed]")
+        context["existing_structure"] = kwargs.get("existing_structure", "[Structure not provided]")
+
+        # Process template variables
+        try:
+            processed_text = guidance_text.format(**context)
+        except KeyError as e:
+            # Template variable missing from context - provide helpful error
+            self.logger.warning(
+                f"Template variable {e} not provided for {agent_type} guidance. "
+                f"Returning unprocessed template."
+            )
+            processed_text = guidance_text
+
+        return {
+            "mode": "guidance",
+            "agent": agent_type,
+            "prompt": processed_text,
+            "context": context,
+            "guidance_file": str(guidance_path),
+        }
 
     async def review_document(
         self,
