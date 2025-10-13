@@ -141,14 +141,30 @@ def create_symlinks():
     else:
         print(f"  [WARNING] Source file not found: {claude_md_source}")
 
-    # Copy LEGAL_WORK_PROTOCOL.md (always overwrite)
-    protocol_source = source_base / ".claude" / "LEGAL_WORK_PROTOCOL.md"
+    # Copy LEGAL_WORK_PROTOCOL.md from new location (always overwrite)
+    protocol_source = source_base / ".claude" / "protocols" / "LEGAL_WORK_PROTOCOL.md"
     protocol_target = base_path / "LEGAL_WORK_PROTOCOL.md"
 
     if protocol_source.exists():
         import shutil
         shutil.copy2(protocol_source, protocol_target)
         print(f"  [UPDATED] LEGAL_WORK_PROTOCOL.md")
+    else:
+        # Fallback to old location for backwards compatibility
+        protocol_source_old = source_base / ".claude" / "LEGAL_WORK_PROTOCOL.md"
+        if protocol_source_old.exists():
+            import shutil
+            shutil.copy2(protocol_source_old, protocol_target)
+            print(f"  [UPDATED] LEGAL_WORK_PROTOCOL.md (from old location)")
+
+    # Copy COMMANDS_REFERENCE.md (always overwrite)
+    commands_source = source_base / ".claude" / "COMMANDS_REFERENCE.md"
+    commands_target = base_path / "COMMANDS_REFERENCE.md"
+
+    if commands_source.exists():
+        import shutil
+        shutil.copy2(commands_source, commands_target)
+        print(f"  [UPDATED] COMMANDS_REFERENCE.md")
 
     # Copy .env example to root if no .env exists
     env_example = base_path / "wepublic_defender" / ".env.example"
@@ -213,6 +229,40 @@ def create_symlinks():
                         print(f"  [COPIED] .claude/commands/{rel}")
     except Exception as e:
         print(f"  [WARN] Failed to copy .claude/commands: {e}")
+
+    # Copy/merge .claude/workflows (workflow instruction files)
+    workflows_src = repo_root / ".claude" / "workflows"
+    workflows_dst = base_path / ".claude" / "workflows"
+    try:
+        if workflows_src.exists():
+            workflows_dst.mkdir(parents=True, exist_ok=True)
+            for item in workflows_src.rglob("*"):
+                if item.is_file():
+                    rel = item.relative_to(workflows_src)
+                    dst_file = workflows_dst / rel
+                    dst_file.parent.mkdir(parents=True, exist_ok=True)
+                    import shutil
+                    shutil.copy2(item, dst_file)
+                    print(f"  [COPIED] .claude/workflows/{rel}")
+    except Exception as e:
+        print(f"  [WARN] Failed to copy .claude/workflows: {e}")
+
+    # Copy/merge .claude/protocols (legal standards and protocols)
+    protocols_src = repo_root / ".claude" / "protocols"
+    protocols_dst = base_path / ".claude" / "protocols"
+    try:
+        if protocols_src.exists():
+            protocols_dst.mkdir(parents=True, exist_ok=True)
+            for item in protocols_src.rglob("*"):
+                if item.is_file():
+                    rel = item.relative_to(protocols_src)
+                    dst_file = protocols_dst / rel
+                    dst_file.parent.mkdir(parents=True, exist_ok=True)
+                    import shutil
+                    shutil.copy2(item, dst_file)
+                    print(f"  [COPIED] .claude/protocols/{rel}")
+    except Exception as e:
+        print(f"  [WARN] Failed to copy .claude/protocols: {e}")
 
     # Create .database for state tracking (file management logs, etc.)
     db_dir = base_path / ".database"
@@ -310,13 +360,38 @@ def main():
     print("INITIALIZATION COMPLETE")
     print("="*60)
     print("\nNext steps:")
-    print("1. Edit GAMEPLAN.md with case strategy")
-    print("2. Add case details to 01_CASE_OVERVIEW/")
-    print("3. Place new documents in 00_NEW_DOCUMENTS_INBOX/")
-    print("4. Configure API keys in .env")
-    print("5. Start Claude Code: claude-code")
+    print("1. Configure API keys in .env")
+    print("2. Edit GAMEPLAN.md with case strategy")
+    print("3. Add case details to 01_CASE_OVERVIEW/")
+    print("4. Place new documents in 00_NEW_DOCUMENTS_INBOX/")
+    print("5. Start Claude Code: claude")
     print("\nClaude will help organize files and maintain structure.")
+    print("\n" + "="*60)
+    print("AVAILABLE COMMANDS")
     print("="*60)
+    print("\nJust type these in Claude Code (or ask in plain English):")
+    print("\n  /check-env             Check setup and API keys")
+    print("  /organize              Organize inbox files")
+    print("  /deep-research-prep    Generate deep research prompt")
+    print("  /research [topic]      Quick legal research")
+    print("  /strategy              Get strategic recommendations")
+    print("  /draft [type]          Draft a legal document")
+    print("  /review [file]         Review document before filing")
+    print("\nOr just tell Claude what you want in plain English!")
+    print("\nFor more details, open COMMANDS_REFERENCE.md")
+    print("="*60)
+
+    # IMPORTANT: Warn about needing to restart Claude Code for slash commands
+    print("\n" + "="*60)
+    print("⚠️  IMPORTANT: RESTART CLAUDE CODE NOW")
+    print("="*60)
+    print("\nSlash commands have been installed to .claude/commands/")
+    print("but Claude Code must be restarted to load them.")
+    print("\n📋 Steps:")
+    print("  1. Exit Claude Code (Ctrl+C or close the window)")
+    print("  2. Run 'claude' again in this same folder")
+    print("  3. Slash commands like /deep-research-prep will now work")
+    print("\n" + "="*60 + "\n")
 
     if logger:
         logger.info("Case init completed successfully")
