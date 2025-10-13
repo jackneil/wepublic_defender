@@ -45,8 +45,15 @@ setup(
     ],
     entry_points={
         "console_scripts": [
+            "wpd-check-env=wepublic_defender.cli.check_env:main",
+            "wpd-init-case=wepublic_defender.cli.init_case:main",
             "wpd-run-agent=wepublic_defender.cli.run_agent:main",
             "wpd-usage-summary=wepublic_defender.cli.usage_summary:main",
+            "wpd-verify-citation=wepublic_defender.cli.verify_citation:main",
+            "wpd-find-citations=wepublic_defender.cli.find_citations:main",
+            "wpd-review-pipeline=wepublic_defender.cli.review_pipeline:main",
+            "wpd-file-log=wepublic_defender.cli.file_log:main",
+            "wpd-deep-research-prompt=wepublic_defender.cli.deep_research_prompt:main",
         ],
     },
     extras_require={
