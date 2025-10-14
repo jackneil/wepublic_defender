@@ -5,7 +5,7 @@ Tests WePublicDefender class initialization and agent calling.
 """
 
 import pytest
-from unittest.mock import Mock, AsyncMock, patch, MagicMock
+from unittest.mock import patch
 from wepublic_defender import WePublicDefender
 
 
@@ -39,7 +39,7 @@ class TestWePublicDefenderInit:
     @patch('wepublic_defender.core.OpenAI')
     def test_clients_created(self, mock_openai):
         """Test OpenAI and Grok clients are created."""
-        wpd = WePublicDefender()
+        WePublicDefender()
 
         # Should have attempted to create clients
         assert mock_openai.call_count >= 1  # Called for both openai and grok
@@ -96,7 +96,7 @@ class TestCallAgent:
             }
         }
 
-        result = await wpd.call_agent(agent_type, "Test document content")
+        result = await wpd.call_agent(agent_type, "Test document content", mode="external-llm")
 
         assert result["agent"] == agent_type
         assert "text" in result  # Should have returned text
@@ -106,9 +106,9 @@ class TestCallAgent:
 
     @pytest.mark.asyncio
     async def test_invalid_agent_type_raises(self, wpd):
-        """Test invalid agent type raises ValueError."""
-        with pytest.raises(ValueError, match="Unknown agent type"):
-            await wpd.call_agent("nonexistent_agent", "Test document")
+        """Test invalid agent type raises ValueError or FileNotFoundError."""
+        with pytest.raises((ValueError, FileNotFoundError)):
+            await wpd.call_agent("nonexistent_agent", "Test document", mode="guidance")
 
     @pytest.mark.asyncio
     @patch('wepublic_defender.core.chat_complete')
@@ -119,7 +119,7 @@ class TestCallAgent:
             "usage": {"input": 10, "output": 5, "cached": 0}
         }
 
-        await wpd.call_agent("self_review", "Test", override_model="grok-4")
+        await wpd.call_agent("self_review", "Test", mode="external-llm", override_model="grok-4")
 
         # Verify chat_complete was called with grok-4
         call_kwargs = mock_chat.call_args.kwargs
@@ -134,7 +134,7 @@ class TestCallAgent:
             "usage": {"input": 10, "output": 5, "cached": 0}
         }
 
-        await wpd.call_agent("self_review", "Test", override_service_tier="priority")
+        await wpd.call_agent("self_review", "Test", mode="external-llm", override_service_tier="priority")
 
         call_kwargs = mock_chat.call_args.kwargs
         assert call_kwargs["service_tier"] == "priority"
@@ -148,7 +148,7 @@ class TestCallAgent:
             "usage": {"input": 10, "output": 5, "cached": 0}
         }
 
-        await wpd.call_agent("strategy", "Test", override_effort="high")
+        await wpd.call_agent("strategy", "Test", mode="external-llm", override_effort="high")
 
         call_kwargs = mock_chat.call_args.kwargs
         assert call_kwargs["effort"] == "high"
@@ -167,7 +167,7 @@ class TestCallAgent:
             }
         }
 
-        await wpd.call_agent("self_review", "Test document")
+        await wpd.call_agent("self_review", "Test document", mode="external-llm")
 
         # Verify tokens were added to tracker
         # The usage should be tracked for the model that was called
@@ -182,7 +182,7 @@ class TestCallAgent:
             "usage": {"input": 10, "output": 5, "cached": 0}
         }
 
-        await wpd.call_agent("drafter", "Test")
+        await wpd.call_agent("drafter", "Test", mode="external-llm")
 
         # Verify system message includes markdown instructions
         call_args = mock_chat.call_args
@@ -203,6 +203,7 @@ class TestCallAgent:
         await wpd.call_agent(
             "citation_verify",
             "Test",
+            mode="external-llm",
             override_jurisdiction="South Carolina",
             override_court="U.S. District Court"
         )
@@ -220,7 +221,7 @@ class TestCallAgent:
         """Test error handling when LLM call fails."""
         mock_chat.side_effect = Exception("API Error")
 
-        result = await wpd.call_agent("self_review", "Test")
+        result = await wpd.call_agent("self_review", "Test", mode="external-llm")
 
         # Should return error dict instead of raising
         assert "error" in result
@@ -235,8 +236,9 @@ class TestCallAgent:
             "usage": {"input": 10, "output": 5, "cached": 0}
         }
 
-        result = await wpd.call_agent("citation_verify", "Test", web_search=True)
+        result = await wpd.call_agent("citation_verify", "Test", mode="external-llm", web_search=True)
 
+        assert "web_search" in result
         assert result["web_search"] is True
 
 

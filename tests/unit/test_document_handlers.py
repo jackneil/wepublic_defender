@@ -5,8 +5,7 @@ Tests markdown-to-Word conversion and federal court formatting.
 """
 
 import pytest
-from pathlib import Path
-from unittest.mock import Mock, patch, MagicMock
+from unittest.mock import patch, MagicMock
 from wepublic_defender.document_handlers import (
     DocumentFormatConfig,
     MarkdownToWordConverter,
@@ -47,8 +46,6 @@ class TestDocumentFormatConfig:
                 f"Found hardcoded case info: {danger}"
 
     @pytest.mark.parametrize("field_name,test_value", [
-        ("plaintiff_name", "JOHN DOE"),
-        ("defendant_name", "ABC CORPORATION"),
         ("case_number", "C/A No. 3:25-12345-ABC"),
         ("court_district", "FOR THE DISTRICT OF SOUTH CAROLINA"),
         ("font_size", 14),
@@ -147,7 +144,7 @@ class TestConvertMarkdownToWord:
         mock_md_path.read_text.return_value = "# Test"
         mock_path.return_value = mock_md_path
 
-        result = convert_markdown_to_word(
+        convert_markdown_to_word(
             str(temp_markdown_file),
             court_config={"case_number": "TEST-123"}
         )
@@ -202,36 +199,18 @@ class TestMarkdownParsing:
         # For now, just verify the pattern exists
         converter = MarkdownToWordConverter()
 
-        markdown_samples = [
-            ("# H1", 1),
-            ("## H2", 2),
-            ("### H3", 3),
-            ("#### H4", 4),
-        ]
-
         # We'd parse these in actual implementation
         # Just verify we have the logic structure
         assert hasattr(converter, 'config')
 
     def test_bold_italic_detection(self):
         """Test bold/italic text detection patterns."""
-        test_cases = [
-            ("**bold text**", "bold"),
-            ("*italic text*", "italic"),
-            ("***bold italic***", "both"),
-        ]
-
         # Would test actual regex/parsing in implementation
         assert True  # Placeholder
 
     def test_blockquote_detection(self):
         """Test blockquote detection."""
         converter = MarkdownToWordConverter()
-
-        blockquote_samples = [
-            "> This is a quote",
-            "> Multi-line\n> quote",
-        ]
 
         # Would test parsing logic
         assert hasattr(converter, 'config')

@@ -273,6 +273,66 @@ Override:
 --run-both
 ```
 
+###  ⏱️ Bash Command Timeouts for LLM Agent Calls (CRITICAL)
+
+**ALWAYS specify extended timeout when running agents in external-llm mode via Bash.**
+
+The Bash tool has a default 120-second (2-minute) timeout that will kill long-running LLM calls even if the Python/LLM timeouts are configured longer.
+
+#### Required Timeout
+
+- **Minimum: 600000ms (10 minutes)** for any `--mode external-llm` command
+- Applies to ALL agents: self_review, citation_verify, opposing_counsel, drafter, etc.
+- Without this parameter, Bash will terminate the process at exactly 2 minutes
+
+#### Why This Matters
+
+- Large documents (10K+ tokens) with web search can take 3-5 minutes per model
+- Running 2 models in parallel means waiting for the slower one to complete
+- gpt-5 with high reasoning effort can take 2-4 minutes for complex legal documents
+- Grok-4 with web search may take 1-3 minutes depending on search results
+
+#### Correct Usage
+
+✅ **CORRECT - Includes timeout parameter:**
+
+```python
+Bash(
+    command="C:/Users/jack/.conda/envs/wepublic_defender/python.exe -m wepublic_defender.cli.run_agent --agent self_review --file draft.md --mode external-llm --verbose",
+    description="Run self_review agent",
+    timeout=600000  # 10 minutes - REQUIRED!
+)
+```
+
+❌ **WRONG - Will timeout at 2 minutes:**
+
+```python
+Bash(
+    command="C:/Users/jack/.conda/envs/wepublic_defender/python.exe -m wepublic_defender.cli.run_agent --agent self_review --file draft.md --mode external-llm --verbose",
+    description="Run self_review agent"
+    # Missing timeout parameter - will be killed at 120 seconds!
+)
+```
+
+#### When to Use Extended Timeout
+
+Always use `timeout=600000` for:
+- Any `--mode external-llm` agent call
+- Any `--run-both` flag (runs 2 models in parallel)
+- Any agent with `--web-search` enabled
+- Any operation on documents > 5,000 tokens
+- Citation verification (always needs extended timeout)
+
+#### Incremental Result Saving
+
+The CLI automatically saves each model's results immediately upon completion to `.wepublic_defender/reviews/` directory. This prevents data loss if one model times out while the other completes successfully.
+
+Results are saved as:
+- JSON: `.wepublic_defender/reviews/{agent}_{model}_{timestamp}.json`
+- Markdown: `.wepublic_defender/reviews/{agent}_{model}_{timestamp}.md`
+
+This means even if the Bash command times out, any models that completed before the timeout will have their results preserved.
+
 ---
 
 ## 📝 File Naming Conventions
