@@ -5,9 +5,8 @@ Tests the wpd-convert-to-word command functionality.
 """
 
 from pathlib import Path
-from unittest.mock import Mock, patch, MagicMock, call
+from unittest.mock import Mock, patch
 import json
-import sys
 
 from wepublic_defender.cli.convert_to_word import (
     load_overrides_from_args,

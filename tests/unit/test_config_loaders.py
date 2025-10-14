@@ -6,7 +6,6 @@ Tests configuration loading, saving, and manipulation functions.
 
 import pytest
 import json
-from pathlib import Path
 from wepublic_defender.config import (
     load_llm_providers,
     load_review_settings,
