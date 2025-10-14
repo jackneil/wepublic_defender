@@ -5,7 +5,6 @@ Run this after cloning we_public_defender repo into a case folder.
 """
 
 import os
-import sys
 from pathlib import Path
 
 # Standard directory structure
@@ -132,12 +131,12 @@ def create_symlinks():
         if os.name == 'nt':
             import shutil
             shutil.copy2(claude_md_source, claude_md_target)
-            print(f"  [UPDATED] CLAUDE.md")
+            print("  [UPDATED] CLAUDE.md")
         else:
             if claude_md_target.exists():
                 claude_md_target.unlink()
             claude_md_target.symlink_to(claude_md_source)
-            print(f"  [UPDATED] CLAUDE.md")
+            print("  [UPDATED] CLAUDE.md")
     else:
         print(f"  [WARNING] Source file not found: {claude_md_source}")
 
@@ -148,14 +147,14 @@ def create_symlinks():
     if protocol_source.exists():
         import shutil
         shutil.copy2(protocol_source, protocol_target)
-        print(f"  [UPDATED] LEGAL_WORK_PROTOCOL.md")
+        print("  [UPDATED] LEGAL_WORK_PROTOCOL.md")
     else:
         # Fallback to old location for backwards compatibility
         protocol_source_old = source_base / ".claude" / "LEGAL_WORK_PROTOCOL.md"
         if protocol_source_old.exists():
             import shutil
             shutil.copy2(protocol_source_old, protocol_target)
-            print(f"  [UPDATED] LEGAL_WORK_PROTOCOL.md (from old location)")
+            print("  [UPDATED] LEGAL_WORK_PROTOCOL.md (from old location)")
 
     # Copy COMMANDS_REFERENCE.md (always overwrite)
     commands_source = source_base / ".claude" / "COMMANDS_REFERENCE.md"
@@ -164,7 +163,7 @@ def create_symlinks():
     if commands_source.exists():
         import shutil
         shutil.copy2(commands_source, commands_target)
-        print(f"  [UPDATED] COMMANDS_REFERENCE.md")
+        print("  [UPDATED] COMMANDS_REFERENCE.md")
 
     # Copy .env example to root if no .env exists
     env_example = base_path / "wepublic_defender" / ".env.example"
@@ -172,7 +171,7 @@ def create_symlinks():
     if env_example.exists() and not env_target.exists():
         import shutil
         shutil.copy2(env_example, env_target)
-        print(f"  [COPIED] .env example to .env (fill in your API keys)")
+        print("  [COPIED] .env example to .env (fill in your API keys)")
 
     # Ensure per-case settings directory exists and copy default settings
     case_settings = base_path / ".wepublic_defender"
@@ -199,14 +198,14 @@ def create_symlinks():
     if default_review.exists() and not target_review.exists():
         import shutil
         shutil.copy2(default_review, target_review)
-        print(f"  [COPIED] per-case settings: .wepublic_defender/legal_review_settings.json")
+        print("  [COPIED] per-case settings: .wepublic_defender/legal_review_settings.json")
 
     default_providers = source_config_dir / "llm_providers.json"
     target_providers = case_settings / "llm_providers.json"
     if default_providers.exists() and not target_providers.exists():
         import shutil
         shutil.copy2(default_providers, target_providers)
-        print(f"  [COPIED] per-case settings: .wepublic_defender/llm_providers.json")
+        print("  [COPIED] per-case settings: .wepublic_defender/llm_providers.json")
     if not default_review.exists() or not default_providers.exists():
         print("  [WARN] Source config files not found in:")
         print(f"        {source_config_dir}")
@@ -311,9 +310,9 @@ def create_gameplan():
 [Additional strategic notes]
 """
         gameplan_path.write_text(template)
-        print(f"\n[CREATED] GAMEPLAN.md")
+        print("\n[CREATED] GAMEPLAN.md")
     else:
-        print(f"\n[EXISTS] GAMEPLAN.md")
+        print("\n[EXISTS] GAMEPLAN.md")
 
 def _get_logger():
     """Get logger, handling case where package may not be importable yet."""

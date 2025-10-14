@@ -219,10 +219,10 @@ This format will be automatically converted to Word when ready for filing.
                 if not data:
                     return None
 
-                crit = data.get("critical_issues", [])
-                major = data.get("major_issues", [])
-                minor = data.get("minor_issues", [])
-                ready = data.get("ready_to_file", False)
+                crit = getattr(data, 'critical_issues', [])
+                major = getattr(data, 'major_issues', [])
+                minor = getattr(data, 'minor_issues', [])
+                ready = getattr(data, 'ready_to_file', False)
 
                 if ready:
                     return f"Review passed! Document is ready to file (0 critical, {len(major)} major, {len(minor)} minor issues). Summarize the {len(major)} major issues for the user and ask if they want to address them before filing or proceed as-is."
@@ -235,18 +235,28 @@ This format will be automatically converted to Word when ready for filing.
 
             elif agent_type == "citation_verify":
                 # CitationVerificationResult (list)
-                bad_law = [item for item in items if not item.get("still_good_law", True)]
-                unsupported = [item for item in items if item.get("supports_position") == False]
-                issues = [item for item in items if item.get("issues_found")]
+                bad_law = [item for item in items if not getattr(item, 'still_good_law', True)]
+                unsupported = [item for item in items if getattr(item, 'supports_position', None) == False]
+                issues = [item for item in items if getattr(item, 'issues_found', None)]
 
                 total = len(items)
 
                 if bad_law:
-                    return f"WARNING: {len(bad_law)} of {total} citations are NO LONGER GOOD LAW: {'; '.join([f\"{item.get('case_name', 'Unknown')} ({', '.join(item.get('issues_found', []))})\" for item in bad_law[:2]])}. List these citations with their issues and strongly recommend immediate replacement. Also note {len(unsupported)} citations don't support our position."
+                    # Build summary outside f-string to avoid nested f-string syntax error
+                    bad_law_summary = '; '.join([
+                        "{} ({})".format(
+                            getattr(item, 'case_name', 'Unknown'),
+                            ', '.join(getattr(item, 'issues_found', []))
+                        )
+                        for item in bad_law[:2]
+                    ])
+                    return f"WARNING: {len(bad_law)} of {total} citations are NO LONGER GOOD LAW: {bad_law_summary}. List these citations with their issues and strongly recommend immediate replacement. Also note {len(unsupported)} citations don't support our position."
                 elif unsupported:
-                    return f"Found {len(unsupported)} citations that DON'T SUPPORT our position: {'; '.join([item.get('case_name', 'Unknown') for item in unsupported[:2]])}. List these with explanations of why they don't support us and recommend replacement or removal. {total - len(unsupported)} citations verified as good."
+                    unsupported_names = '; '.join([getattr(item, 'case_name', 'Unknown') for item in unsupported[:2]])
+                    return f"Found {len(unsupported)} citations that DON'T SUPPORT our position: {unsupported_names}. List these with explanations of why they don't support us and recommend replacement or removal. {total - len(unsupported)} citations verified as good."
                 elif issues:
-                    return f"{len(issues)} citations have potential issues (but still good law): {'; '.join([item.get('case_name', 'Unknown') for item in issues[:2]])}. Summarize the issues and ask if user wants to address them. {total - len(issues)} citations verified clean."
+                    issues_names = '; '.join([getattr(item, 'case_name', 'Unknown') for item in issues[:2]])
+                    return f"{len(issues)} citations have potential issues (but still good law): {issues_names}. Summarize the issues and ask if user wants to address them. {total - len(issues)} citations verified clean."
                 else:
                     return f"All {total} citations verified as good law and supporting our position. Briefly confirm this success and ask if user wants to proceed with next review step (opposing_counsel)."
 
@@ -256,15 +266,17 @@ This format will be automatically converted to Word when ready for filing.
                 if not data:
                     return None
 
-                weaknesses = data.get("weaknesses_found", [])
-                critical_weaknesses = [w for w in weaknesses if w.get("severity") == "critical"]
-                major_weaknesses = [w for w in weaknesses if w.get("severity") == "major"]
-                strength = data.get("overall_strength", "unknown")
+                weaknesses = getattr(data, 'weaknesses_found', [])
+                critical_weaknesses = [w for w in weaknesses if getattr(w, 'severity', None) == "critical"]
+                major_weaknesses = [w for w in weaknesses if getattr(w, 'severity', None) == "major"]
+                strength = getattr(data, 'overall_strength', 'unknown')
 
                 if critical_weaknesses:
-                    return f"Opposing counsel found {len(critical_weaknesses)} CRITICAL weaknesses that could get the document dismissed: {'; '.join([w.get('issue', 'Unknown') for w in critical_weaknesses[:2]])}. Overall assessment: {strength}. Present the critical weaknesses as a numbered list with their exploitation strategies and recommend immediate revision before filing."
+                    critical_issues = '; '.join([getattr(w, 'issue', 'Unknown') for w in critical_weaknesses[:2]])
+                    return f"Opposing counsel found {len(critical_weaknesses)} CRITICAL weaknesses that could get the document dismissed: {critical_issues}. Overall assessment: {strength}. Present the critical weaknesses as a numbered list with their exploitation strategies and recommend immediate revision before filing."
                 elif major_weaknesses:
-                    return f"Opposing counsel found {len(major_weaknesses)} major weaknesses (no critical): {'; '.join([w.get('issue', 'Unknown') for w in major_weaknesses[:2]])}. Overall assessment: {strength}. Present the major weaknesses and ask if user wants me to draft strengthening revisions or if they want to address them manually."
+                    major_issues = '; '.join([getattr(w, 'issue', 'Unknown') for w in major_weaknesses[:2]])
+                    return f"Opposing counsel found {len(major_weaknesses)} major weaknesses (no critical): {major_issues}. Overall assessment: {strength}. Present the major weaknesses and ask if user wants me to draft strengthening revisions or if they want to address them manually."
                 else:
                     return f"Opposing counsel found only minor weaknesses. Overall assessment: {strength}. Briefly summarize the document's strengths and minor areas for improvement, then ask if user wants to proceed with final_review."
 
@@ -274,12 +286,13 @@ This format will be automatically converted to Word when ready for filing.
                 if not data:
                     return None
 
-                next_actions = data.get("next_actions", [])
-                high_priority = [a for a in next_actions if a.get("priority", "").upper() == "HIGH"]
-                proc_concerns = data.get("procedural_concerns", [])
+                next_actions = getattr(data, 'next_actions', [])
+                high_priority = [a for a in next_actions if getattr(a, 'priority', '').upper() == "HIGH"]
+                proc_concerns = getattr(data, 'procedural_concerns', [])
 
                 if high_priority:
-                    return f"Strategy analysis complete. {len(high_priority)} HIGH priority actions: {'; '.join([a.get('action', 'Unknown') for a in high_priority[:2]])}. Present the high-priority actions with their deadlines and rationales as a numbered list, then ask user which action they want to tackle first."
+                    high_priority_actions = '; '.join([getattr(a, 'action', 'Unknown') for a in high_priority[:2]])
+                    return f"Strategy analysis complete. {len(high_priority)} HIGH priority actions: {high_priority_actions}. Present the high-priority actions with their deadlines and rationales as a numbered list, then ask user which action they want to tackle first."
                 elif next_actions:
                     return f"Strategy analysis complete. {len(next_actions)} recommended actions, {len(proc_concerns)} procedural concerns. Present the top 3-4 actions with priorities and deadlines, then ask user for their preferred approach."
                 else:
@@ -291,12 +304,13 @@ This format will be automatically converted to Word when ready for filing.
                 if not data:
                     return None
 
-                cases = data.get("cases", [])
-                statutes = data.get("statutes", [])
-                contrary = data.get("contrary_authority", [])
+                cases = getattr(data, 'cases', [])
+                statutes = getattr(data, 'statutes', [])
+                contrary = getattr(data, 'contrary_authority', [])
 
                 if contrary:
-                    return f"Research found {len(cases)} relevant cases and {len(statutes)} statutes, BUT also found {len(contrary)} pieces of CONTRARY AUTHORITY: {'; '.join(contrary[:2])}. Present the key findings including the contrary authority prominently, then discuss strategy for addressing unfavorable precedent."
+                    contrary_summary = '; '.join(contrary[:2])
+                    return f"Research found {len(cases)} relevant cases and {len(statutes)} statutes, BUT also found {len(contrary)} pieces of CONTRARY AUTHORITY: {contrary_summary}. Present the key findings including the contrary authority prominently, then discuss strategy for addressing unfavorable precedent."
                 elif cases or statutes:
                     return f"Research found {len(cases)} relevant cases and {len(statutes)} applicable statutes. Summarize the 3-4 most important findings with their holdings/provisions, then ask user if they want me to draft language incorporating these authorities."
                 else:

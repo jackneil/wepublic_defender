@@ -13,7 +13,6 @@ import sys
 import importlib
 import os
 from pathlib import Path
-import subprocess
 
 
 REQUIRED_PACKAGES = [
