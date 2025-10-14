@@ -10,8 +10,6 @@ from pathlib import Path
 from wepublic_defender.config import (
     load_llm_providers,
     load_review_settings,
-    get_review_settings_path,
-    save_review_settings,
     update_agent_preference,
     get_model_config,
     get_provider_config,

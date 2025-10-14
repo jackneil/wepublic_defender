@@ -17,7 +17,7 @@
     "self_review_agent": {
       "models": ["gpt-5", "grok-4"],
       "effort": "high",
-      "web_search": false
+      "web_search": true
     },
     "citation_verifier_agent": {
       "models": ["grok-4-fast", "gpt-5"],

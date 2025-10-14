@@ -1,4 +1,5 @@
-import json, importlib.util
+import json
+import importlib.util
 path = r"c:\Github\wepublic_defender\wepublic_defender\models\legal_responses.py"
 spec = importlib.util.spec_from_file_location('legal_responses', path)
 mod = importlib.util.module_from_spec(spec)

@@ -4,7 +4,6 @@ Unit tests for convert_to_word CLI command.
 Tests the wpd-convert-to-word command functionality.
 """
 
-import pytest
 from pathlib import Path
 from unittest.mock import Mock, patch, MagicMock, call
 import json
