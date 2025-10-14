@@ -4,10 +4,9 @@ Organize files from 00_NEW_DOCUMENTS_INBOX/ into appropriate directories.
 Can be called by Claude or run standalone.
 """
 
-import os
 import shutil
 from pathlib import Path
-from typing import Dict, List, Tuple
+from typing import List, Tuple
 
 # File categorization rules (keywords in filename)
 CATEGORIZATION_RULES = {
@@ -126,7 +125,7 @@ def main():
             print(f"  ? {item}")
 
     if errors:
-        print(f"\nErrors:")
+        print("\nErrors:")
         for error in errors:
             print(f"  ✗ {error}")
 

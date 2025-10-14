@@ -137,3 +137,7 @@ def main() -> int:
         f"WPD: {'OK' if ok_wpd else 'NOT INSTALLED'} | Env: {'OK' if ok_env else 'RECOMMEND CONDA RUN'}"
     )
     return 0 if all_ok else 1
+
+
+if __name__ == "__main__":
+    sys.exit(main())

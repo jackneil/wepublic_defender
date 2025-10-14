@@ -1,11 +1,30 @@
 # /review Command
 
-Run wepublic_defender adversarial review on a legal document.
+Run wepublic_defender review on a legal document.
+
+## Two-Mode Architecture
+
+**Mode 1: Guidance (DEFAULT - FREE)**
+- Returns structured prompt for Claude Code to execute
+- No API costs
+- Claude Code does the review work
+
+**Mode 2: External-LLM (COSTS MONEY)**
+- Calls external LLM(s) configured in `.wepublic_defender/legal_review_settings.json`
+- If one model configured: calls that model
+- If multiple models configured: calls ALL in parallel for adversarial redundancy
+- Use `--model` flag to run specific model only
 
 ## Usage
 ```
-/review [file_path]
-/review 07_DRAFTS_AND_WORK_PRODUCT/MOTION_TO_DISMISS.docx
+# Guidance mode (default - free)
+/review 07_DRAFTS_AND_WORK_PRODUCT/MOTION_TO_DISMISS.md
+
+# External-LLM mode (costs money - uses settings)
+python <path>/python.exe -m wepublic_defender.cli.run_agent --agent self_review --file 07_DRAFTS_AND_WORK_PRODUCT/MOTION.md --mode external-llm
+
+# External-LLM with specific model
+python <path>/python.exe -m wepublic_defender.cli.run_agent --agent self_review --file MOTION.md --mode external-llm --model gpt-5
 ```
 
 ## Process

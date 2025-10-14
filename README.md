@@ -6,6 +6,19 @@ WePublicDefender is an LLM-guided case management system that helps you fight ba
 
 **Reality Check**: This is AI-powered legal research and document review. It is NOT a lawyer. It WILL make mistakes. The court doesn't care that "the AI told me to do it." Verify everything before you file, or enjoy explaining to the judge why you didn't.
 
+## Table of Contents
+
+- [Step 0 - Get Your Shit Together](#step-0---get-your-shit-together-one-time-setup) - One-time setup: Claude CLI, terminal basics, API keys
+- [Step 1 - Central Setup](#step-1---central-setup-copy-paste-this-into-claude) - Copy-paste this into Claude to set everything up automatically
+- [Available Commands](#available-commands-what-you-can-tell-claude-to-do) - Slash commands and plain English instructions you can use
+- [How to Use Deep Research](#how-to-use-deep-research-step-by-step) - Complete workflow for comprehensive legal research using Claude.ai
+- [Where Your Files End Up](#where-your-files-end-up) - Directory structure and file organization
+- [When Things Break](#when-things-break-they-will) - Common errors and how to fix them
+- [What This Actually Costs](#what-this-actually-costs) - Pricing breakdown for Claude plans and API usage
+- [Technical Appendix](#technical-appendix-for-people-who-know-what-theyre-doing) - Manual setup for developers who don't need hand-holding
+- [Terms of Use](#terms-of-use-yes-this-actually-matters) - Who you can't sue with this software
+- [Disclaimer](#disclaimer-the-boring-but-legally-necessary-part) - Legal disclaimers and responsibility
+
 ## Step 0 - Get Your Shit Together (One-Time Setup)
 
 You'll need Claude Code CLI and some API keys. Yes, this costs money. No, it's not free. But it's cheaper than a lawyer, and at least the AI doesn't bill you for "thinking about your case" while taking a dump.
@@ -122,13 +135,243 @@ You are my coding assistant. Please perform a central setup for WePublicDefender
    - Save these to .wepublic_defender/env_info.json in this case folder with keys:
      { "python_exe": "...", "conda_env": "...", "repo_path": "..." }
 
-10) Offer to run common reviews now (do NOT show me CLI commands):
+10) After setup completes, tell me to RESTART Claude Code:
+   - The init command installs slash commands to .claude/commands/
+   - Claude Code only loads commands at startup, not during a session
+   - Tell me: "Exit Claude Code (Ctrl+C) and run 'claude' again in this folder"
+   - After restart, commands like /deep-research-prep will work
+
+11) Offer to run common reviews now (do NOT show me CLI commands):
    - Ask me in plain language which to run first (Self Review on my main draft, Opposing Counsel attack, or Citation Verification)
    - You run the chosen review(s) for me and summarize results in plain language
    - Include a brief cost/usage summary and where to find outputs/logs
 ```
 
 Save the repo path it prints. You might need it later.
+
+## Available Commands (What You Can Tell Claude to Do)
+
+You don't need to memorize commands or learn Python. Just talk to Claude in plain English. But if you want to be specific, these slash commands do specific things:
+
+**For Getting Started:**
+- `/check-env` - Check if everything is set up correctly (run this if you get errors)
+- `/organize` - Put your messy documents into the right folders
+
+**For Research:**
+- `/deep-research-prep` - Create a research assignment for Claude.ai Deep Research
+  - Use this when starting a new case or need heavy web research
+  - Claude Code will generate a prompt, you copy it to Claude.ai, wait 5-10 minutes for deep research, then paste results back
+  - Way more efficient than doing tons of web searches in Claude Code
+- `/research [topic]` - Quick research on a specific legal topic (lighter than deep research)
+
+**For Strategy:**
+- `/strategy` - Get strategic recommendations for your next moves
+
+**For Writing:**
+- `/draft [type]` - Draft a legal document (motion, response, brief, etc.)
+- `/review [file]` - Have multiple AIs review your document before filing
+
+**How to use these:**
+Just type the command. For example:
+```
+/deep-research-prep
+
+/research summary judgment standards South Carolina
+
+/draft motion to dismiss
+
+/strategy
+```
+
+Claude will do everything else. No technical knowledge required.
+
+## How to Use Deep Research (Step-by-Step)
+
+**Important: Claude Code will automatically offer to run deep research when appropriate.** You rarely need to trigger this manually. This guide shows you what happens and how to complete the workflow when Claude suggests it.
+
+Deep Research uses Claude.ai's Research feature to conduct thorough legal analysis. It's way more efficient than running dozens of web searches in Claude Code, and gives you comprehensive case assessment in 5-10 minutes.
+
+### When Claude Will Offer Deep Research
+
+Claude Code automatically suggests deep research when:
+- You're starting a new case (first time in a case folder)
+- GAMEPLAN.md is empty or minimal
+- You ask about case viability or strategy
+- You need comprehensive legal analysis
+
+You'll see something like:
+> "This appears to be a new case. Would you like me to generate a comprehensive deep research prompt? I'll create a prompt you can paste into Claude.ai's Deep Research mode..."
+
+### When to Use Deep Research
+
+- Starting a new case (need viability assessment)
+- Major legal motions requiring extensive case law
+- Complex legal questions with multiple angles
+- Strategic case planning
+
+### Requirements
+
+- Claude Pro, Max, Team, or Enterprise account (for Claude.ai web interface)
+- Access to https://claude.ai
+
+### Complete Workflow
+
+**Step 1: Claude Generates Research Prompt**
+
+When Claude Code offers deep research (or you type `/deep-research-prep`), it will generate a comprehensive research prompt tailored to your case with sections like:
+- Legal Claims Analysis
+- Damages Assessment
+- Venue & Jurisdiction Analysis
+- Defense Strategy Prediction
+- Procedural Requirements
+- Strategic Considerations
+- Timeline and Cost Estimates
+
+**Step 2: Copy the Entire Prompt**
+
+Select all the text from the generated prompt (usually starts with "# Deep Legal Research" and ends with special instructions). Copy it to your clipboard.
+
+**Step 3: Open Claude.ai in Your Browser**
+
+Go to https://claude.ai and log in with your paid account.
+
+**Step 4: Enable Research Mode**
+
+Look at the bottom left of the chat interface. You'll see a "Research" button:
+- If the button is **WHITE** → Research is disabled
+- Click the button once to enable it (turns **BLUE**)
+- Make sure "Web search" is also enabled
+
+**Step 5: Paste Prompt and Start Research**
+
+- Paste the entire research prompt into the message box
+- Choose model: **Claude Sonnet 4.5** (best for legal research)
+- Click Send
+
+**Step 6: Wait for Research (5-10 Minutes)**
+
+Claude.ai will now:
+- Conduct multiple interconnected web searches automatically
+- Explore different legal angles systematically
+- Build on previous findings with each search
+- Cite all sources
+
+You'll see Claude working through the research with progress updates. Grab coffee. This takes time.
+
+**Step 7: Download Results to Your Case Folder**
+
+When research completes:
+
+1. Click the **three dots menu** (⋮) in the top right of the conversation
+2. Select **"Download conversation"**
+3. Save the file to: **`YourCaseFolder/00_NEW_DOCUMENTS_INBOX/`**
+   - Example: `C:\Users\You\Desktop\CapitalOneScrewedMe\00_NEW_DOCUMENTS_INBOX\deep_research_2025-10-13.md`
+4. Use a descriptive filename like `deep_research_initial_assessment.md`
+
+**Why download to inbox?** Claude Code automatically checks the inbox after generating a deep research prompt. It knows to look there.
+
+**Step 8: Tell Claude Code You're Done**
+
+Go back to your Claude Code terminal and say:
+
+```
+Done. I downloaded the research to the inbox.
+```
+
+Or just:
+
+```
+Done
+```
+
+Claude Code will automatically:
+- Find the research file in `00_NEW_DOCUMENTS_INBOX/`
+- Move it to `06_RESEARCH/deep_research_initial_assessment.md`
+- Analyze the findings
+- Generate a strategic GAMEPLAN.md with concrete next steps
+- Mark initial research as complete
+
+**Alternative: Copy-Paste (If Download Doesn't Work)**
+
+If you can't download or prefer to copy-paste:
+
+1. Select all of Claude.ai's research response
+2. Copy to clipboard
+3. In Claude Code terminal, say:
+```
+Here are the deep research results:
+
+[Paste the entire research output here]
+```
+
+Claude will save it and process it the same way.
+
+**Step 9: Review Your GAMEPLAN**
+
+Open `GAMEPLAN.md` in your case folder. Claude has generated:
+- Case strength assessment (Strong/Moderate/Weak)
+- Recommended legal claims with rationale
+- Immediate next steps (specific action items)
+- Key deadlines
+- Evidence you need to gather
+- Anticipated opposing arguments
+- Settlement considerations
+- Risks and concerns
+
+This becomes your roadmap for the entire case.
+
+### Manual Trigger (Rarely Needed)
+
+If Claude doesn't automatically offer deep research, you can trigger it:
+
+```
+/deep-research-prep
+```
+
+But 99% of the time, Claude will suggest it when appropriate.
+
+### Tips
+
+- **Be specific about your situation**: When Claude asks for case details, provide facts, dates, parties, jurisdiction
+- **Let it complete**: Deep Research takes 5-10 minutes (sometimes longer). Don't interrupt
+- **Download to inbox**: Claude knows to look there - makes the workflow seamless
+- **Check key citations**: After receiving results, verify critical case citations with `/research [case name]`
+- **Update GAMEPLAN regularly**: As case evolves, tell Claude to update GAMEPLAN.md
+
+### Troubleshooting
+
+**"Research button is missing in Claude.ai"**
+- You need a paid Claude account (Pro, Max, Team, or Enterprise)
+- Research is not available on free plans
+
+**"Research isn't working"**
+- Make sure Web Search toggle is enabled (bottom of Claude.ai chat)
+- Try prompting: "Claude, please use the Research tool to..."
+
+**"Claude Code isn't finding my downloaded file"**
+- Make sure you saved it to `00_NEW_DOCUMENTS_INBOX/` in your case folder
+- Check the filename doesn't have weird characters
+- Tell Claude: "Check the inbox for the research file"
+
+**"Results are too generic"**
+- Provide more specific details when Claude asks about your case
+- Include: jurisdiction, court, parties, specific facts, dates
+- Claude can regenerate the prompt with more details
+
+### Why This Workflow Works
+
+**Separation of concerns:**
+- **Claude.ai** does the heavy lifting: 50+ web searches, 5-10 minutes of research
+- **Claude Code** does the organization: files the research, generates strategy, manages your case
+
+**Cost effective:**
+- One deep research session ≈ cost of one lawyer consultation
+- But you get comprehensive analysis instead of "let me think about it and bill you later"
+
+**Reusable:**
+- Research goes into `06_RESEARCH/`
+- You can reference it throughout the case
+- Update GAMEPLAN as situation changes
 
 ## Where Your Files End Up
 

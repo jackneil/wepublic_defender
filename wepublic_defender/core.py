@@ -192,6 +192,141 @@ This format will be automatically converted to Word when ready for filing.
                 return json.loads(snippet)
             raise
 
+    def _generate_claude_prompt(self, agent_type: str, parsed: Any) -> Optional[str]:
+        """
+        Generate intelligent claude_prompt based on agent type and results.
+
+        This prompt tells Claude Code what to do next based on the agent's findings.
+        Agents have domain knowledge and can guide the orchestration workflow.
+
+        Args:
+            agent_type: Type of agent that ran
+            parsed: Parsed structured result (may be single object or list)
+
+        Returns:
+            String prompt for Claude Code, or None if no guidance needed
+        """
+        if parsed is None:
+            return None
+
+        try:
+            # Handle list results (like citation_verify)
+            items = parsed if isinstance(parsed, list) else [parsed]
+
+            if agent_type == "self_review" or agent_type == "final_review":
+                # DocumentReviewResult
+                data = items[0] if items else None
+                if not data:
+                    return None
+
+                crit = getattr(data, 'critical_issues', [])
+                major = getattr(data, 'major_issues', [])
+                minor = getattr(data, 'minor_issues', [])
+                ready = getattr(data, 'ready_to_file', False)
+
+                if ready:
+                    return f"Review passed! Document is ready to file (0 critical, {len(major)} major, {len(minor)} minor issues). Summarize the {len(major)} major issues for the user and ask if they want to address them before filing or proceed as-is."
+                elif crit:
+                    return f"Found {len(crit)} CRITICAL issues that must be fixed before filing: {'; '.join(crit[:2])}{'...' if len(crit) > 2 else ''}. Also {len(major)} major and {len(minor)} minor issues. Present the critical issues as a bulleted list and ask if I should research solutions or if the user wants to review the full output first."
+                elif major:
+                    return f"Found {len(major)} major issues (no critical): {'; '.join(major[:2])}{'...' if len(major) > 2 else ''}. Also {len(minor)} minor issues. Document needs revision. Present the major issues as a bulleted list and ask user if they want me to draft fixes or if they prefer to revise manually."
+                else:
+                    return f"Only {len(minor)} minor issues found. Document is in good shape. List the minor improvements and ask if the user wants to address them or proceed with filing."
+
+            elif agent_type == "citation_verify":
+                # CitationVerificationResult (list)
+                bad_law = [item for item in items if not getattr(item, 'still_good_law', True)]
+                unsupported = [item for item in items if getattr(item, 'supports_position', None) == False]
+                issues = [item for item in items if getattr(item, 'issues_found', None)]
+
+                total = len(items)
+
+                if bad_law:
+                    # Build summary outside f-string to avoid nested f-string syntax error
+                    bad_law_summary = '; '.join([
+                        "{} ({})".format(
+                            getattr(item, 'case_name', 'Unknown'),
+                            ', '.join(getattr(item, 'issues_found', []))
+                        )
+                        for item in bad_law[:2]
+                    ])
+                    return f"WARNING: {len(bad_law)} of {total} citations are NO LONGER GOOD LAW: {bad_law_summary}. List these citations with their issues and strongly recommend immediate replacement. Also note {len(unsupported)} citations don't support our position."
+                elif unsupported:
+                    unsupported_names = '; '.join([getattr(item, 'case_name', 'Unknown') for item in unsupported[:2]])
+                    return f"Found {len(unsupported)} citations that DON'T SUPPORT our position: {unsupported_names}. List these with explanations of why they don't support us and recommend replacement or removal. {total - len(unsupported)} citations verified as good."
+                elif issues:
+                    issues_names = '; '.join([getattr(item, 'case_name', 'Unknown') for item in issues[:2]])
+                    return f"{len(issues)} citations have potential issues (but still good law): {issues_names}. Summarize the issues and ask if user wants to address them. {total - len(issues)} citations verified clean."
+                else:
+                    return f"All {total} citations verified as good law and supporting our position. Briefly confirm this success and ask if user wants to proceed with next review step (opposing_counsel)."
+
+            elif agent_type == "opposing_counsel":
+                # OpposingCounselReview
+                data = items[0] if items else None
+                if not data:
+                    return None
+
+                weaknesses = getattr(data, 'weaknesses_found', [])
+                critical_weaknesses = [w for w in weaknesses if getattr(w, 'severity', None) == "critical"]
+                major_weaknesses = [w for w in weaknesses if getattr(w, 'severity', None) == "major"]
+                strength = getattr(data, 'overall_strength', 'unknown')
+
+                if critical_weaknesses:
+                    critical_issues = '; '.join([getattr(w, 'issue', 'Unknown') for w in critical_weaknesses[:2]])
+                    return f"Opposing counsel found {len(critical_weaknesses)} CRITICAL weaknesses that could get the document dismissed: {critical_issues}. Overall assessment: {strength}. Present the critical weaknesses as a numbered list with their exploitation strategies and recommend immediate revision before filing."
+                elif major_weaknesses:
+                    major_issues = '; '.join([getattr(w, 'issue', 'Unknown') for w in major_weaknesses[:2]])
+                    return f"Opposing counsel found {len(major_weaknesses)} major weaknesses (no critical): {major_issues}. Overall assessment: {strength}. Present the major weaknesses and ask if user wants me to draft strengthening revisions or if they want to address them manually."
+                else:
+                    return f"Opposing counsel found only minor weaknesses. Overall assessment: {strength}. Briefly summarize the document's strengths and minor areas for improvement, then ask if user wants to proceed with final_review."
+
+            elif agent_type == "strategy":
+                # StrategyRecommendation
+                data = items[0] if items else None
+                if not data:
+                    return None
+
+                next_actions = getattr(data, 'next_actions', [])
+                high_priority = [a for a in next_actions if getattr(a, 'priority', '').upper() == "HIGH"]
+                proc_concerns = getattr(data, 'procedural_concerns', [])
+
+                if high_priority:
+                    high_priority_actions = '; '.join([getattr(a, 'action', 'Unknown') for a in high_priority[:2]])
+                    return f"Strategy analysis complete. {len(high_priority)} HIGH priority actions: {high_priority_actions}. Present the high-priority actions with their deadlines and rationales as a numbered list, then ask user which action they want to tackle first."
+                elif next_actions:
+                    return f"Strategy analysis complete. {len(next_actions)} recommended actions, {len(proc_concerns)} procedural concerns. Present the top 3-4 actions with priorities and deadlines, then ask user for their preferred approach."
+                else:
+                    return "Strategy analysis complete but no specific actions recommended. Summarize the strategic situation and ask user what they want to focus on."
+
+            elif agent_type == "research":
+                # LegalResearchResult
+                data = items[0] if items else None
+                if not data:
+                    return None
+
+                cases = getattr(data, 'cases', [])
+                statutes = getattr(data, 'statutes', [])
+                contrary = getattr(data, 'contrary_authority', [])
+
+                if contrary:
+                    contrary_summary = '; '.join(contrary[:2])
+                    return f"Research found {len(cases)} relevant cases and {len(statutes)} statutes, BUT also found {len(contrary)} pieces of CONTRARY AUTHORITY: {contrary_summary}. Present the key findings including the contrary authority prominently, then discuss strategy for addressing unfavorable precedent."
+                elif cases or statutes:
+                    return f"Research found {len(cases)} relevant cases and {len(statutes)} applicable statutes. Summarize the 3-4 most important findings with their holdings/provisions, then ask user if they want me to draft language incorporating these authorities."
+                else:
+                    return "Research complete but found limited directly applicable authority. Summarize what was found and suggest either broader research or alternative legal theories."
+
+            elif agent_type == "drafter":
+                # Drafter returns free-form text, no structured data
+                return "Draft complete. Present a brief summary of the document structure (main sections/arguments), then ask user if they want me to run self_review to check for issues or if they prefer to review it manually first."
+
+            else:
+                return None
+
+        except Exception as e:
+            self.logger.warning(f"Failed to generate claude_prompt for {agent_type}: {e}")
+            return None
+
     def _create_openai_client(self):
         """Create OpenAI client from environment."""
         if OpenAI is None:
@@ -223,6 +358,7 @@ This format will be automatically converted to Word when ready for filing.
         self,
         agent_type: str,
         document: str,
+        mode: Literal["guidance", "external-llm"] = "guidance",
         web_search: Optional[bool] = None,
         override_model: Optional[str] = None,
         override_effort: Optional[str] = None,
@@ -234,36 +370,64 @@ This format will be automatically converted to Word when ready for filing.
         **kwargs
     ) -> Dict:
         """
-        Call a specific review agent.
+        Call a specific review agent in one of two modes.
 
-        When multiple models are configured and no override_model is specified,
-        runs all models in parallel for adversarial redundancy.
+        Modes:
+            - guidance: Returns prompt template for Claude Code (FREE - no API costs)
+            - external-llm: Calls external LLM(s) configured in settings (COSTS MONEY)
+                - If settings has one model: calls that model
+                - If settings has multiple models: calls ALL in parallel for adversarial redundancy
+                - Use --model flag to override and run specific model only
+                - Use --run-both flag to force running both models
 
         Args:
             agent_type: One of [strategy, drafter, self_review, citation_verify,
-                        opposing_counsel, final_review]
+                        opposing_counsel, final_review, organize, research]
             document: Document content to review
+            mode: Agent mode - guidance or external-llm (default: guidance)
             web_search: Override web search setting
             override_model: Run single specific model (bypasses multi-model)
             **kwargs: Additional context for prompt
 
         Returns:
-            Agent response as structured dict. If multiple models ran:
+            For guidance mode:
             {
-                "model": "first_model",       # Primary result
+                "mode": "guidance",
+                "agent": "drafter",
+                "prompt": "...",  # Guidance text for Claude Code
+                "context": {...},
+            }
+
+            For external-llm mode:
+            {
+                "mode": "external-llm",
+                "model": "gpt-5",
                 "text": "...",
                 "usage": {...},
-                "multi_model": True,
-                "alternate_results": [...]    # Other model results
+                "multi_model": true,  # If multiple models ran
+                "alternate_results": [...]  # If multiple models ran
             }
 
         Example:
             >>> defender = WePublicDefender()
-            >>> result = await defender.call_agent(
-            ...     "self_review",
-            ...     document=draft_text
-            ... )
+            >>> # Guidance mode (free)
+            >>> result = await defender.call_agent("drafter", doc, mode="guidance")
+            >>> # External LLM mode (costs money)
+            >>> result = await defender.call_agent("drafter", doc, mode="external-llm")
         """
+        # Special case: organize agent ONLY operates in guidance mode
+        if agent_type == "organize":
+            if mode != "guidance":
+                self.logger.warning(
+                    "organize agent only supports guidance mode; forcing mode=guidance"
+                )
+            return self._load_guidance(agent_type, document, **kwargs)
+
+        # Route based on mode
+        if mode == "guidance":
+            return self._load_guidance(agent_type, document, **kwargs)
+
+        # For external-llm mode, proceed with API calls
         # Get agent config from review settings
         agent_key = self._resolve_agent_key(agent_type)
         agent_config = self.review_settings.get("reviewAgentConfig", {}).get(agent_key)
@@ -612,6 +776,12 @@ This format will be automatically converted to Word when ready for filing.
         if log_path:
             out["citation_log"] = log_path
 
+        # Generate claude_prompt for Claude Code orchestration
+        # This tells Claude what to do next based on agent findings
+        claude_prompt = self._generate_claude_prompt(agent_type, parsed)
+        if claude_prompt:
+            out["claude_prompt"] = claude_prompt
+
         # Log usage to CSV
         try:
             from .usage_logger import log_agent_call
@@ -640,6 +810,88 @@ This format will be automatically converted to Word when ready for filing.
                 pass
 
         return out
+
+    def _load_guidance(
+        self,
+        agent_type: str,
+        document: str,
+        **kwargs
+    ) -> Dict:
+        """
+        Load and process guidance prompt template for Claude Code.
+
+        Args:
+            agent_type: Agent to get guidance for
+            document: Document content to inject into template
+            **kwargs: Additional context variables for template
+
+        Returns:
+            Dict with guidance prompt and metadata
+        """
+        # Map agent type to guidance file
+        guidance_file = f"{agent_type}_guidance.md"
+
+        # Get package guidance_prompts directory
+        package_dir = Path(__file__).parent
+        guidance_path = package_dir / "guidance_prompts" / guidance_file
+
+        if not guidance_path.exists():
+            raise FileNotFoundError(
+                f"Guidance file not found: {guidance_path}\n"
+                f"Available agents: strategy, drafter, self_review, citation_verify, "
+                f"opposing_counsel, final_review, organize, research"
+            )
+
+        # Load guidance template
+        try:
+            guidance_text = guidance_path.read_text(encoding="utf-8")
+        except Exception as e:
+            raise IOError(f"Failed to read guidance file {guidance_path}: {e}")
+
+        # Build context for template variables
+        context = {}
+
+        # Get jurisdiction context from settings
+        wf = self.review_settings.get("workflowConfig", {})
+        jcfg = wf.get("jurisdictionConfig", {}) or {}
+
+        context["jurisdiction"] = kwargs.get("jurisdiction") or jcfg.get("jurisdiction", "South Carolina")
+        context["court"] = kwargs.get("court") or jcfg.get("court", "United States District Court")
+        context["circuit"] = kwargs.get("circuit") or jcfg.get("circuit", "Fourth Circuit")
+
+        # Document content
+        context["document_content"] = document
+
+        # Agent-specific context
+        context["document_type"] = kwargs.get("document_type", "Legal Document")
+        context["deadline"] = kwargs.get("deadline", "[Deadline not specified]")
+        context["case_name"] = kwargs.get("case_name", "[Case name not specified]")
+        context["opposing_party"] = kwargs.get("opposing_party", "Opposing Party")
+        context["our_claims"] = kwargs.get("our_claims", "[Claims not specified]")
+        context["their_likely_defenses"] = kwargs.get("their_likely_defenses", "[Defenses not specified]")
+
+        # Organize-specific context
+        context["inbox_files"] = kwargs.get("inbox_files", "[No files listed]")
+        context["existing_structure"] = kwargs.get("existing_structure", "[Structure not provided]")
+
+        # Process template variables
+        try:
+            processed_text = guidance_text.format(**context)
+        except KeyError as e:
+            # Template variable missing from context - provide helpful error
+            self.logger.warning(
+                f"Template variable {e} not provided for {agent_type} guidance. "
+                f"Returning unprocessed template."
+            )
+            processed_text = guidance_text
+
+        return {
+            "mode": "guidance",
+            "agent": agent_type,
+            "prompt": processed_text,
+            "context": context,
+            "guidance_file": str(guidance_path),
+        }
 
     async def review_document(
         self,

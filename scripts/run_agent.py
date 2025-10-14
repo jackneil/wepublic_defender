@@ -15,7 +15,6 @@ import asyncio
 import sys
 import io
 from pathlib import Path
-import sys
 
 from wepublic_defender.core import WePublicDefender
 from wepublic_defender.config import (

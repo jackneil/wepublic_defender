@@ -87,18 +87,69 @@ def _get_configs(model_key: str) -> Tuple[Dict[str, Any], Dict[str, Any], Dict[s
     return provider_cfg, model_cfg, root
 
 
-def _compute_timeout(root_cfg: Dict[str, Any], service_tier: str = "auto") -> float:
+def _compute_timeout(
+    root_cfg: Dict[str, Any],
+    service_tier: str = "auto",
+    model_cfg: Optional[Dict[str, Any]] = None,
+    web_search: bool = False,
+    effort: Optional[str] = None,
+    supports_reasoning: bool = False,
+) -> float:
     """
     Compute a request timeout using the repo's timeoutConfig policy.
+
+    Priority order:
+    1. Model-specific timeout (timeouts.with_web_search if web_search else timeouts.default)
+    2. Global default timeout
+    3. Apply effort multiplier (if model supports reasoning)
+    4. Apply service tier multiplier
+    5. Apply web_search multiplier if configured and web_search is True
+
+    Args:
+        root_cfg: Root configuration dict
+        service_tier: Service tier (auto, flex, standard, priority)
+        model_cfg: Optional model configuration dict with timeouts field
+        web_search: Whether web search is enabled for this request
+        effort: Reasoning effort level (minimal, low, medium, high)
+        supports_reasoning: Whether the model supports reasoning/effort
+
+    Returns:
+        Computed timeout in seconds, capped at maxTimeout
     """
     tcfg = root_cfg.get("timeoutConfig", {})
-    base = float(tcfg.get("globalDefault", 120))
+
+    # 1. Determine base timeout (model-specific or global default)
+    if model_cfg and "timeouts" in model_cfg:
+        model_timeouts = model_cfg["timeouts"]
+        if web_search and "with_web_search" in model_timeouts:
+            base = float(model_timeouts["with_web_search"])
+        elif "default" in model_timeouts:
+            base = float(model_timeouts["default"])
+        else:
+            base = float(tcfg.get("globalDefault", 120))
+    else:
+        base = float(tcfg.get("globalDefault", 120))
+
+    timeout = base
+
+    # 2. Apply effort multiplier (only if model supports reasoning and effort is specified)
     mults = tcfg.get("multipliers", {})
+    if supports_reasoning and effort:
+        effort_mults = mults.get("effort", {})
+        effort_factor = float(effort_mults.get(effort, 1.0))
+        timeout = timeout * effort_factor
+
+    # 3. Apply service tier multiplier
     tier_mults = (mults.get("service_tier", {}) or {})
     tier_factor = float(tier_mults.get(service_tier, 1.0))
+    timeout = timeout * tier_factor
 
-    # Additional multipliers can be layered here if needed (e.g., file_search)
-    timeout = base * tier_factor
+    # 4. Apply web_search multiplier if configured (in addition to model-specific timeout)
+    if web_search and "web_search" in mults:
+        web_search_factor = float(mults.get("web_search", 1.0))
+        timeout = timeout * web_search_factor
+
+    # 5. Cap at maxTimeout
     max_timeout = float(tcfg.get("maxTimeout", 43200))
     return min(timeout, max_timeout)
 
@@ -167,8 +218,18 @@ def _call_openai_responses(
     temp = temperature if temperature is not None else model_cfg.get("temperature")
     max_tokens = max_output_tokens or model_cfg.get("max_output_tokens")
 
+    # Check reasoning support first (needed for timeout computation)
+    supports_reasoning = bool(model_cfg.get("supported_features", {}).get("reasoning", False))
+
     # Timeout policy
-    timeout = _compute_timeout(root_cfg, service_tier=service_tier)
+    timeout = _compute_timeout(
+        root_cfg,
+        service_tier=service_tier,
+        model_cfg=model_cfg,
+        web_search=web_search,
+        effort=effort,
+        supports_reasoning=supports_reasoning
+    )
     started = time.time()
     req_client = client.with_options(timeout=timeout)
 
@@ -189,7 +250,6 @@ def _call_openai_responses(
     tokens_param = "max_output_tokens"  # For logging
 
     # Reasoning effort (native Responses API format)
-    supports_reasoning = bool(model_cfg.get("supported_features", {}).get("reasoning", False))
     effort_applied = False
     if supports_reasoning and effort in {"minimal", "low", "medium", "high"}:
         request_kwargs["reasoning"] = {"effort": effort}
@@ -202,13 +262,14 @@ def _call_openai_responses(
     # Log request
     try:
         logger.debug(
-            "OpenAI Responses API request | model_key=%s | wire_model=%s | tokens_param=%s | max_tokens=%s | temp=%s | tier=%s | effort=%s | web_search=%s | pydantic=%s | msgs=%s",
+            "OpenAI Responses API request | model_key=%s | wire_model=%s | tokens_param=%s | max_tokens=%s | temp=%s | tier=%s | timeout=%.1fs | effort=%s | web_search=%s | pydantic=%s | msgs=%s",
             model_key,
             wire_model,
             tokens_param,
             max_tokens,
             temp,
             service_tier,
+            timeout,
             effort if effort_applied else None,
             web_search,
             pydantic_model.__name__ if pydantic_model else None,
@@ -257,7 +318,7 @@ def _call_openai_responses(
     # Log response
     try:
         logger.info(
-            "OpenAI Responses API response | model_key=%s | wire_model=%s | in=%s | out=%s | cached=%s | dur=%.2fs | effort=%s | tier=%s",
+            "OpenAI Responses API response | model_key=%s | wire_model=%s | in=%s | out=%s | cached=%s | dur=%.2fs | effort=%s | tier=%s | timeout=%.1fs",
             model_key,
             wire_model,
             int(in_tok or 0),
@@ -266,6 +327,7 @@ def _call_openai_responses(
             duration,
             effort if effort_applied else None,
             service_tier,
+            timeout,
         )
     except Exception:
         pass
@@ -334,8 +396,18 @@ def _call_xai_native(
     temp = temperature if temperature is not None else model_cfg.get("temperature")
     max_tokens = max_output_tokens or model_cfg.get("max_output_tokens")
 
+    # Check reasoning support first (needed for timeout computation)
+    supports_reasoning = bool(model_cfg.get("supported_features", {}).get("reasoning", False))
+
     # Timeout policy
-    timeout = _compute_timeout(root_cfg, service_tier=service_tier)
+    timeout = _compute_timeout(
+        root_cfg,
+        service_tier=service_tier,
+        model_cfg=model_cfg,
+        web_search=web_search,
+        effort=effort,
+        supports_reasoning=supports_reasoning
+    )
     started = time.time()
 
     # Create xAI client
@@ -356,7 +428,6 @@ def _call_xai_native(
     # Reasoning effort (xAI uses "reasoning_effort" with string value, not dict)
     # NOTE: grok-4 models do NOT support reasoning_effort parameter
     # Only grok-3-mini supports it according to xAI docs
-    supports_reasoning = bool(model_cfg.get("supported_features", {}).get("reasoning", False))
     effort_applied = False
     if supports_reasoning and effort in {"low", "high"}:
         # Only send reasoning_effort for grok-3 models, not grok-4
@@ -395,12 +466,13 @@ def _call_xai_native(
     # Log request
     try:
         logger.debug(
-            "xAI native SDK request | model_key=%s | wire_model=%s | max_tokens=%s | temp=%s | tier=%s | effort=%s | web_search=%s | pydantic=%s | msgs=%s",
+            "xAI native SDK request | model_key=%s | wire_model=%s | max_tokens=%s | temp=%s | tier=%s | timeout=%.1fs | effort=%s | web_search=%s | pydantic=%s | msgs=%s",
             model_key,
             wire_model,
             max_tokens,
             temp,
             service_tier,
+            timeout,
             effort if effort_applied else None,
             web_search,
             pydantic_model.__name__ if pydantic_model else None,
@@ -439,7 +511,7 @@ def _call_xai_native(
     # Log response
     try:
         logger.info(
-            "xAI native SDK response | model_key=%s | wire_model=%s | in=%s | out=%s | cached=%s | dur=%.2fs | effort=%s | tier=%s",
+            "xAI native SDK response | model_key=%s | wire_model=%s | in=%s | out=%s | cached=%s | dur=%.2fs | effort=%s | tier=%s | timeout=%.1fs",
             model_key,
             wire_model,
             int(in_tok or 0),
@@ -448,6 +520,7 @@ def _call_xai_native(
             duration,
             effort if effort_applied else None,
             service_tier,
+            timeout,
         )
     except Exception:
         pass

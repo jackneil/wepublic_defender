@@ -1,0 +1,95 @@
+name: Automated PR Review
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  code-quality:
+    name: Code Quality & Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e .
+          pip install -e ".[dev]"
+          pip install ruff mypy pytest pytest-cov
+
+      - name: Run Ruff (Fast Python Linter)
+        run: |
+          ruff check . --output-format=github
+        continue-on-error: true
+
+      - name: Run MyPy (Type Checking)
+        run: |
+          mypy wepublic_defender --ignore-missing-imports
+        continue-on-error: true
+
+      - name: Run Tests with Coverage
+        run: |
+          pytest tests/ --cov=wepublic_defender --cov-report=term-missing --cov-report=xml
+
+      - name: Upload Coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          file: ./coverage.xml
+          fail_ci_if_error: false
+        continue-on-error: true
+
+  security-check:
+    name: Security Scan
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run Bandit (Security Linter)
+        run: |
+          pip install bandit
+          bandit -r wepublic_defender/ -f json -o bandit-report.json
+        continue-on-error: true
+
+      - name: Upload Bandit Report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: bandit-security-report
+          path: bandit-report.json
+
+  # ai-review:
+  #   name: AI Code Review
+  #   runs-on: ubuntu-latest
+  #   permissions:
+  #     contents: read
+  #     pull-requests: write
+  #
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #       with:
+  #         fetch-depth: 0
+  #
+  #     - name: AI Code Review
+  #       uses: coderabbitai/ai-pr-reviewer@latest
+  #       with:
+  #         github_token: ${{ secrets.GITHUB_TOKEN }}
+  #         openai_api_key: ${{ secrets.OPENAI_API_KEY }}
+  #         # Review focus areas for legal tech
+  #         review_comment_lgtm: false
+  #         system_message: |
+  #           You are reviewing code for a legal case management system. Focus on:
+  #           - Security issues (this handles sensitive legal data)
+  #           - Proper error handling (legal work cannot fail silently)
+  #           - Citation accuracy and legal compliance
+  #           - Data privacy and confidentiality
+  #           - Windows/cross-platform compatibility
+  #           - API key handling and secrets management

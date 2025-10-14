@@ -2,6 +2,17 @@
 
 Organize all files from 00_NEW_DOCUMENTS_INBOX/ into appropriate directories.
 
+## IMPORTANT: Guidance Mode Only
+
+**The organize agent ONLY operates in guidance mode - it NEVER uses external APIs.**
+
+- Always returns structured prompt for Claude Code to execute
+- FREE - no API costs
+- Claude Code does all the file reading, categorization, and moving
+- Cannot be invoked with `--mode external-llm` (will be forced back to guidance)
+
+This is intentional - file organization requires Claude Code's file system access and context about the case.
+
 ## Process
 
 1. **Scan Inbox**
@@ -90,7 +101,7 @@ If a filename is not meaningful (e.g., random numbers, scan_####, image####, unt
    - Use underscores `_` as separators; avoid spaces; keep original extension
    - Include a concise, high‑signal summary; examples:
      - Communications: `2025-01-15_Smith>Jones_Email_SubpoenaFollowup.pdf`
-     - Court filing: `2025-02-03_Doe_v_CapitalOne_MotionToDismiss.pdf`
+     - Court filing: `2025-02-03_Doe_v_ABC_Corp_MotionToDismiss.pdf`
      - Evidence: `2024-12-01_BankOfAmerica_Stmt_ending1234.pdf`
      - Transcript: `2025-03-20_Jones_Deposition.pdf`
    - If sender/recipient roles matter (Plaintiff/Defendant/Court), prefer role or name that aids recognition.
@@ -151,9 +162,9 @@ When organizing, go beyond just the inbox:
    - Inbox: `MOTION_TO_DISMISS_FINAL.pdf` (needs filing)
    - Related drafts in database: `07_DRAFTS_AND_WORK_PRODUCT/drafts/motion_to_dismiss_v1.md`, `motion_to_dismiss_v2.md`
    - Action:
-     * Move final → `02_PLEADINGS/03_Motions/2025-10-12_Doe_v_CapitalOne_MotionToDismiss.pdf`
-     * Move drafts → `02_PLEADINGS/03_Motions/2025-10-12_Doe_v_CapitalOne_MotionToDismiss_draft_v1.md`
-     * Move drafts → `02_PLEADINGS/03_Motions/2025-10-12_Doe_v_CapitalOne_MotionToDismiss_draft_v2.md`
+     * Move final → `02_PLEADINGS/03_Motions/2025-10-12_Doe_v_ABC_Corp_MotionToDismiss.pdf`
+     * Move drafts → `02_PLEADINGS/03_Motions/2025-10-12_Doe_v_ABC_Corp_MotionToDismiss_draft_v1.md`
+     * Move drafts → `02_PLEADINGS/03_Motions/2025-10-12_Doe_v_ABC_Corp_MotionToDismiss_draft_v2.md`
 
 5. **Guiding Principles**
 - Preserve all user files (never delete actual documents)

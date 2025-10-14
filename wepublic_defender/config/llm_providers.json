@@ -46,6 +46,12 @@
         "priority": 0.67,
         "standard": 1.0,
         "auto": 1.0
+      },
+      "effort": {
+        "minimal": 1.0,
+        "low": 1.0,
+        "medium": 2.0,
+        "high": 4.0
       }
     },
     "maxTimeout": 43200
@@ -78,8 +84,8 @@
         "semantic_caching": true
       },
       "timeouts": {
-        "default": 90,
-        "with_web_search": 180
+        "default": 120,
+        "with_web_search": 300
       },
       "notes": "GPT-5 with 90% cache discount. Supports 272K input / 128K output tokens. Priority tier: 2x standard pricing."
     },
@@ -109,8 +115,8 @@
         "semantic_caching": true
       },
       "timeouts": {
-        "default": 45,
-        "with_web_search": 90
+        "default": 90,
+        "with_web_search": 180
       },
       "notes": "Cost-efficient variant. Performance decreases at longer context lengths. Priority tier: 1.8x standard pricing."
     },
@@ -194,8 +200,8 @@
         "file_upload": true
       },
       "timeouts": {
-        "default": 75,
-        "with_web_search": 150
+        "default": 120,
+        "with_web_search": 240
       },
       "notes": "Grok 4 with 256K context. Supports web search at $0.025 per source."
     },
@@ -232,8 +238,8 @@
         "file_upload": true
       },
       "timeouts": {
-        "default": 45,
-        "with_web_search": 90
+        "default": 90,
+        "with_web_search": 180
       },
       "notes": "Cost-efficient Grok with massive 2M token context window. Unified reasoning/non-reasoning architecture. Tiered pricing: cheaper under 128K tokens."
     }

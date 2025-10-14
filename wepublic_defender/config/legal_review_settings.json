@@ -1,6 +1,8 @@
 {
   "loggingLevel": "INFO",
 
+  "_comment_mode_architecture": "All agents support TWO modes: (1) guidance (FREE - returns prompt for Claude Code to execute), (2) external-llm (COSTS MONEY - calls LLM(s) configured in 'models' list). If multiple models listed, ALL run in parallel for adversarial redundancy. Use --model flag to override and run specific model only. Default mode is 'guidance' to minimize costs.",
+
   "reviewAgentConfig": {
     "strategy_agent": {
       "models": ["gpt-5", "grok-4"],
@@ -15,7 +17,7 @@
     "self_review_agent": {
       "models": ["gpt-5", "grok-4"],
       "effort": "high",
-      "web_search": false
+      "web_search": true
     },
     "citation_verifier_agent": {
       "models": ["grok-4-fast", "gpt-5"],
@@ -31,6 +33,15 @@
       "models": ["gpt-5", "grok-4"],
       "effort": "high",
       "web_search": false
+    },
+    "research_agent": {
+      "models": ["grok-4", "gpt-5"],
+      "effort": "high",
+      "web_search": true
+    },
+    "organize_agent": {
+      "_comment": "organize agent ONLY operates in guidance mode - NEVER uses external APIs",
+      "guidance_only": true
     }
   },
 

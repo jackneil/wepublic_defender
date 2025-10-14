@@ -2,11 +2,25 @@
 
 Perform legal research on a topic using web search.
 
+## Two-Mode Architecture
+
+**Mode 1: Guidance (DEFAULT - FREE)**
+- Returns structured prompt for Claude Code to execute
+- No API costs
+- Claude Code does the research work using web search
+
+**Mode 2: External-LLM (COSTS MONEY)**
+- Calls external LLM(s) with web search enabled
+- Uses models configured in `.wepublic_defender/legal_review_settings.json`
+- Best for when you want automated research saved to files
+
 ## Usage
 ```
-/research [topic]
+# Guidance mode (default - free) - Claude Code does research
 /research statute of limitations breach of contract South Carolina
-/research Fourth Circuit standard for summary judgment
+
+# External-LLM mode (costs money - automated)
+python <path>/python.exe -m wepublic_defender.cli.run_agent --agent research --text "Research Fourth Circuit summary judgment standard" --mode external-llm --web-search
 ```
 
 ## Process
@@ -48,7 +62,7 @@ RELEVANT CASES:
 - Jones v. Bank of America, 450 S.E.2d 123 (S.C. 2020)
   Holding: Discovery rule applies when defendant conceals breach
 
-- Smith v. Capital One, 380 S.E.2d 456 (S.C. 2018)
+- Smith v. Big Bank Corp, 380 S.E.2d 456 (State 2018)
   Holding: Continuing breach doctrine applies to ongoing contractual violations
 
 SAVED TO: 06_RESEARCH/statute_of_limitations_contract_SC.md

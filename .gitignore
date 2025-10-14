@@ -57,3 +57,20 @@ htmlcov/
 .mypy_cache/
 .dmypy.json
 dmypy.json
+
+# WePublicDefender runtime files
+.claude/settings.local.json
+.wepublic_defender/usage_log.csv
+.wepublic_defender/deep_research_prompt.md
+07_DRAFTS_AND_WORK_PRODUCT/
+00_NEW_DOCUMENTS_INBOX/
+01_CASE_OVERVIEW/
+02_PLEADINGS/
+03_DISCOVERY/
+04_EVIDENCE/
+05_CORRESPONDENCE/
+06_RESEARCH/
+08_REFERENCE/
+GAMEPLAN.md
+.database/
+nul

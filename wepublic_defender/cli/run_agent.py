@@ -37,9 +37,58 @@ async def _amain(args: argparse.Namespace) -> int:
     wpd = WePublicDefender()
 
     def _print_result(tag: str, res: dict) -> None:
-        print(f"=== Agent Output ({tag}) ===", flush=True)
-        print(res.get("text", ""), flush=True)
-        print(flush=True)
+        # Handle guidance mode output differently
+        if res.get("mode") == "guidance":
+            print(f"=== Guidance Prompt ({tag}) ===", flush=True)
+            print("This agent returned guidance for Claude Code to execute.\n", flush=True)
+            print(res.get("prompt", ""), flush=True)
+            print(flush=True)
+        else:
+            print(f"=== Agent Output ({tag}) ===", flush=True)
+            print(res.get("text", ""), flush=True)
+            print(flush=True)
+
+    async def _save_result(agent: str, model: str, result: dict, file_or_text: str) -> None:
+        """Save agent result immediately to prevent data loss on timeout."""
+        from datetime import datetime
+        import json
+
+        try:
+            # Create reviews directory if doesn't exist
+            reviews_dir = Path(".wepublic_defender/reviews")
+            reviews_dir.mkdir(parents=True, exist_ok=True)
+
+            # Generate timestamp and filenames with reviewed file name included
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            safe_model = model.replace(":", "_").replace("/", "_")
+
+            # Extract filename from file_or_text if it's a path
+            file_base = "text"
+            if file_or_text and "/" in file_or_text or "\\" in file_or_text:
+                try:
+                    file_base = Path(file_or_text).stem
+                except Exception:
+                    file_base = "text"
+
+            # Format: YYYYMMDD_HHMMSS_agent_filename_model
+            base_name = f"{timestamp}_{agent}_{file_base}_{safe_model}"
+
+            # Save JSON
+            json_path = reviews_dir / f"{base_name}.json"
+            json_path.write_text(json.dumps(result, indent=2), encoding="utf-8")
+
+            # Save markdown summary
+            md_path = reviews_dir / f"{base_name}.md"
+            md_content = f"# {agent} Review - {model}\n\n"
+            md_content += f"**Timestamp:** {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n"
+            md_content += f"**File/Text:** {file_or_text}\n\n"
+            md_content += "## Result\n\n"
+            md_content += result.get("text", "(no text output)")
+            md_path.write_text(md_content, encoding="utf-8")
+
+            print(f"[saved] {agent}/{model} result saved to {json_path.name}", flush=True)
+        except Exception as e:
+            print(f"[warn] Failed to save {agent}/{model} result: {e}", flush=True)
 
     # Pre-compute planned model and effort for progress display
     settings = load_review_settings()
@@ -60,8 +109,9 @@ async def _amain(args: argparse.Namespace) -> int:
     # Log agent invocation
     try:
         logger.info(
-            "Agent run started | agent=%s | file=%s | model=%s | effort=%s | web_search=%s | tier=%s | run_both=%s",
+            "Agent run started | agent=%s | mode=%s | file=%s | model=%s | effort=%s | web_search=%s | tier=%s | run_both=%s",
             args.agent,
+            args.mode,
             args.file or "text",
             planned_model or "auto",
             planned_effort or "auto",
@@ -71,6 +121,26 @@ async def _amain(args: argparse.Namespace) -> int:
         )
     except Exception:
         pass
+
+    # Handle guidance mode (no API calls, just return prompt)
+    if args.mode == "guidance":
+        try:
+            result = await wpd.call_agent(
+                args.agent,
+                content,
+                mode="guidance",
+                jurisdiction=args.jurisdiction,
+                court=args.court,
+                circuit=args.circuit,
+            )
+            if args.verbose:
+                print(f"[status] Generated guidance prompt for {args.agent}", flush=True)
+            _print_result("guidance", result)
+            print("\n[info] Guidance mode used - no API costs incurred", flush=True)
+            return 0
+        except Exception as e:
+            print(f"[error] Failed to load guidance: {e}", flush=True)
+            return 1
 
     # Heartbeat task prints periodic progress
     async def _heartbeat_loop(label: str, interval: int = 15):
@@ -123,34 +193,59 @@ async def _amain(args: argparse.Namespace) -> int:
                 hb1 = asyncio.create_task(_heartbeat_loop(f"{args.agent}/{configured_model or 'auto'}", hb_sec))
                 hb2 = asyncio.create_task(_heartbeat_loop(f"{args.agent}/{alt_model}", hb_sec))
 
-                try:
-                    # Run BOTH models in parallel using asyncio.gather
-                    primary, secondary = await asyncio.gather(
-                        wpd.call_agent(
-                            args.agent,
-                            content,
-                            web_search=args.web_search,
-                            override_model=args.model,
-                            override_effort=args.effort,
-                            override_service_tier=args.service_tier,
-                            override_jurisdiction=args.jurisdiction,
-                            override_court=args.court,
-                            override_circuit=args.circuit,
-                            override_preferred_authority=[s.strip() for s in args.prefer_authority.split(',')] if args.prefer_authority else None,
-                        ),
-                        wpd.call_agent(
-                            args.agent,
-                            content,
-                            web_search=args.web_search,
-                            override_model=alt_model,
-                            override_effort=args.effort,
-                            override_service_tier=args.service_tier,
-                            override_jurisdiction=args.jurisdiction,
-                            override_court=args.court,
-                            override_circuit=args.circuit,
-                            override_preferred_authority=[s.strip() for s in args.prefer_authority.split(',')] if args.prefer_authority else None,
-                        )
+                # Create wrapper functions that save results immediately after completion
+                async def _run_and_save_primary():
+                    res = await wpd.call_agent(
+                        args.agent,
+                        content,
+                        mode=args.mode,
+                        web_search=args.web_search if args.web_search else None,
+                        override_model=args.model,
+                        override_effort=args.effort,
+                        override_service_tier=args.service_tier,
+                        override_jurisdiction=args.jurisdiction,
+                        override_court=args.court,
+                        override_circuit=args.circuit,
+                        override_preferred_authority=[s.strip() for s in args.prefer_authority.split(',')] if args.prefer_authority else None,
                     )
+                    # Save result immediately, even if the other model hasn't finished yet
+                    if not isinstance(res, Exception):
+                        await _save_result(args.agent, res.get("model", configured_model or "auto"), res, args.file or "text")
+                    return res
+
+                async def _run_and_save_secondary():
+                    res = await wpd.call_agent(
+                        args.agent,
+                        content,
+                        mode=args.mode,
+                        web_search=args.web_search if args.web_search else None,
+                        override_model=alt_model,
+                        override_effort=args.effort,
+                        override_service_tier=args.service_tier,
+                        override_jurisdiction=args.jurisdiction,
+                        override_court=args.court,
+                        override_circuit=args.circuit,
+                        override_preferred_authority=[s.strip() for s in args.prefer_authority.split(',')] if args.prefer_authority else None,
+                    )
+                    # Save result immediately, even if the other model hasn't finished yet
+                    if not isinstance(res, Exception):
+                        await _save_result(args.agent, res.get("model", alt_model), res, args.file or "text")
+                    return res
+
+                try:
+                    # Run BOTH models in parallel with return_exceptions=True
+                    # This prevents one model's failure from killing the other's execution
+                    primary, secondary = await asyncio.gather(
+                        _run_and_save_primary(),
+                        _run_and_save_secondary(),
+                        return_exceptions=True
+                    )
+
+                    # Convert exceptions to error dicts for consistent handling
+                    if isinstance(primary, Exception):
+                        primary = {"error": str(primary), "model": configured_model or "unknown", "usage": {}}
+                    if isinstance(secondary, Exception):
+                        secondary = {"error": str(secondary), "model": alt_model, "usage": {}}
                 finally:
                     hb1.cancel()
                     hb2.cancel()
@@ -278,7 +373,8 @@ async def _amain(args: argparse.Namespace) -> int:
                 result = await wpd.call_agent(
                     args.agent,
                     content,
-                    web_search=args.web_search,
+                    mode=args.mode,
+                    web_search=args.web_search if args.web_search else None,
                     override_model=args.model,
                     override_effort=args.effort,
                     override_service_tier=args.service_tier,
@@ -339,6 +435,20 @@ async def _amain(args: argparse.Namespace) -> int:
             except Exception:
                 pass
 
+            # Save result(s) - handles both single-model and config-based multi-model runs
+            if result.get("multi_model"):
+                # Config-based multi-model run (core ran multiple models automatically)
+                # Save primary result
+                await _save_result(args.agent, result.get("model", "unknown"), result, args.file or "text")
+                # Save alternate results
+                for alt in result.get("alternate_results", []):
+                    if alt and not isinstance(alt, Exception):
+                        await _save_result(args.agent, alt.get("model", "unknown"), alt, args.file or "text")
+            else:
+                # Single model run - save the result
+                if not result.get("error"):
+                    await _save_result(args.agent, result.get("model", "unknown"), result, args.file or "text")
+
             if args.verbose:
                 if err:
                     print(f"[error] {args.agent} failed: {err}", flush=True)
@@ -396,9 +506,10 @@ def main() -> int:
     except Exception:
         pass
     ap = argparse.ArgumentParser(prog="wpd-run-agent", description="Run a WePublicDefender agent")
-    ap.add_argument("--agent", required=True, help="Agent type: strategy|drafter|self_review|citation_verify|opposing_counsel|final_review")
+    ap.add_argument("--agent", required=True, help="Agent type: strategy|drafter|self_review|citation_verify|opposing_counsel|final_review|organize|research")
     ap.add_argument("--file", help="Path to input file (markdown/text)")
     ap.add_argument("--text", help="Raw input text")
+    ap.add_argument("--mode", choices=["guidance", "external-llm"], default="guidance", help="Agent mode: guidance (FREE - returns prompt for Claude Code) or external-llm (COSTS MONEY - calls LLM(s) from settings)")
     ap.add_argument("--web-search", action="store_true", help="Force-enable web search if supported")
     ap.add_argument("--model", help="Override model key (e.g., gpt-5, gpt-4o, grok-4, grok-4-fast)")
     ap.add_argument("--run-both", action="store_true", help="Run twice using the configured model and a reasonable alternate provider model")
