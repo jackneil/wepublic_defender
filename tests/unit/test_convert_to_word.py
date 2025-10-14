@@ -255,7 +255,7 @@ class TestMainFunction:
         mock_converter.convert.assert_called_once()
         # Verify success message
         print_calls = [str(call) for call in mock_print.call_args_list]
-        assert any("Successfully converted" in str(call) for call in print_calls)
+        assert any("[SUCCESS]" in str(call) for call in print_calls)
 
     @patch('wepublic_defender.cli.convert_to_word.argparse.ArgumentParser.parse_args')
     @patch('wepublic_defender.cli.convert_to_word.Path')
