@@ -1,0 +1,72 @@
+{
+  "court": {
+    "name": "IN THE UNITED STATES DISTRICT COURT",
+    "district": "FOR THE [DISTRICT] OF [STATE]",
+    "division": null,
+    "_comment": "Set division if applicable, e.g., 'Charleston Division'"
+  },
+  "parties": {
+    "plaintiffs": [
+      {
+        "name": "[PLAINTIFF NAME]",
+        "type": "individual",
+        "_comment": "type can be: individual, corporation, entity"
+      }
+    ],
+    "plaintiff_label": "Plaintiff",
+    "_comment_plaintiff": "Can be: Plaintiff, Petitioner, Appellant, etc.",
+    "defendants": [
+      {
+        "name": "[DEFENDANT NAME]",
+        "type": "individual",
+        "_comment": "type can be: individual, corporation, entity"
+      }
+    ],
+    "defendant_label": "Defendant",
+    "_comment_defendant": "Can be: Defendant, Respondent, Appellee, etc.",
+    "other_parties": []
+  },
+  "case_number": "[CASE NUMBER]",
+  "_comment_case_number": "Format varies by court, e.g., '3:25-cv-12345-MGL'",
+  "formatting": {
+    "font_name": "Times New Roman",
+    "font_size": 12,
+    "line_spacing": "double",
+    "margin_inches": 1.0,
+    "paragraph_numbering": true,
+    "footnote_style": "standard",
+    "_comment": "Federal court standard formatting settings"
+  },
+  "signature_block": {
+    "attorney_name": "[ATTORNEY NAME]",
+    "bar_number": "[BAR NUMBER]",
+    "firm_name": null,
+    "address": {
+      "street": null,
+      "city": null,
+      "state": null,
+      "zip": null
+    },
+    "phone": null,
+    "email": null,
+    "representing": "Plaintiff",
+    "_comment": "Signature block information for documents"
+  },
+  "certificate_of_service": {
+    "method": "CM/ECF",
+    "parties_served": [],
+    "_comment": "Certificate of service defaults"
+  },
+  "local_rules": {
+    "word_limit": null,
+    "page_limit": null,
+    "requires_proposed_order": false,
+    "requires_certificate_of_counsel": false,
+    "_comment": "Local rule requirements that vary by court and document type"
+  },
+  "_instructions": {
+    "usage": "This file stores case-specific information for document generation. Update the bracketed placeholders with your actual case information.",
+    "security_note": "DO NOT commit this file to version control if it contains real case information.",
+    "override": "Values can be overridden via command-line arguments when converting documents."
+  }
+}

@@ -4,6 +4,24 @@
 
 This is the first time Claude Code is processing this legal case directory. Follow this checklist to set up properly.
 
+## ⚠️ CRITICAL: Windows File Editing (READ FIRST)
+
+**If on Windows (`<env>` shows `win32`)**, you MUST use backslashes `\` in Edit/MultiEdit file paths:
+
+**❌ WRONG - Will cause errors:**
+```
+Edit(file_path: "C:/github/file.py", ...)
+```
+
+**✅ CORRECT - Always works:**
+```
+Edit(file_path: "C:\\github\\file.py", ...)
+```
+
+**Bash commands still use forward slashes `/`** - this is ONLY for Edit/MultiEdit tool paths.
+
+**This is a known bug in Claude Code** - Edit tool requires backslashes on Windows even though everything else uses forward slashes.
+
 ## 1. Verify Environment Setup
 
 Run environment check to ensure Python, packages, and API keys are configured:

@@ -130,6 +130,41 @@ python <path>/python.exe -m wepublic_defender.cli.run_agent --agent self_review 
 /review 07_DRAFTS_AND_WORK_PRODUCT/motion_to_dismiss.md
 ```
 
+### `wpd-convert-to-word`
+**What it does:** Converts markdown legal documents to properly formatted Word documents for court filing
+**When to use:** When you're ready to convert your drafted markdown document to a Word document with perfect court formatting
+**Features:**
+- Perfect case caption with aligned brackets
+- Automatic court header formatting
+- Federal court compliant (Times New Roman 12pt, double-spaced, 1" margins)
+- Loads case details from `.wepublic_defender/case_config.json`
+- Supports command-line overrides for quick changes
+
+**Examples:**
+```bash
+# Basic conversion (uses case_config.json settings)
+wpd-convert-to-word --file motion.md
+
+# Specify output file
+wpd-convert-to-word --file brief.md --output final_brief.docx
+
+# Override case number
+wpd-convert-to-word --file motion.md --case-number "3:25-cv-12345-MGL"
+
+# Override parties
+wpd-convert-to-word --file motion.md --plaintiff "John Doe" --defendant "ABC Corp"
+
+# Preview configuration without converting
+wpd-convert-to-word --preview-config
+```
+
+**Configuration:**
+Update `.wepublic_defender/case_config.json` with your case details:
+- Court name and district
+- Party names and labels (Plaintiff/Defendant, Petitioner/Respondent)
+- Case number
+- Formatting preferences
+
 ---
 
 ## Don't Like Commands?

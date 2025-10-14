@@ -87,18 +87,56 @@ def _get_configs(model_key: str) -> Tuple[Dict[str, Any], Dict[str, Any], Dict[s
     return provider_cfg, model_cfg, root
 
 
-def _compute_timeout(root_cfg: Dict[str, Any], service_tier: str = "auto") -> float:
+def _compute_timeout(
+    root_cfg: Dict[str, Any],
+    service_tier: str = "auto",
+    model_cfg: Optional[Dict[str, Any]] = None,
+    web_search: bool = False,
+) -> float:
     """
     Compute a request timeout using the repo's timeoutConfig policy.
+
+    Priority order:
+    1. Model-specific timeout (timeouts.with_web_search if web_search else timeouts.default)
+    2. Global default timeout
+    3. Apply service tier multiplier
+    4. Apply web_search multiplier if configured and web_search is True
+
+    Args:
+        root_cfg: Root configuration dict
+        service_tier: Service tier (auto, flex, standard, priority)
+        model_cfg: Optional model configuration dict with timeouts field
+        web_search: Whether web search is enabled for this request
+
+    Returns:
+        Computed timeout in seconds, capped at maxTimeout
     """
     tcfg = root_cfg.get("timeoutConfig", {})
-    base = float(tcfg.get("globalDefault", 120))
+
+    # 1. Determine base timeout (model-specific or global default)
+    if model_cfg and "timeouts" in model_cfg:
+        model_timeouts = model_cfg["timeouts"]
+        if web_search and "with_web_search" in model_timeouts:
+            base = float(model_timeouts["with_web_search"])
+        elif "default" in model_timeouts:
+            base = float(model_timeouts["default"])
+        else:
+            base = float(tcfg.get("globalDefault", 120))
+    else:
+        base = float(tcfg.get("globalDefault", 120))
+
+    # 2. Apply service tier multiplier
     mults = tcfg.get("multipliers", {})
     tier_mults = (mults.get("service_tier", {}) or {})
     tier_factor = float(tier_mults.get(service_tier, 1.0))
-
-    # Additional multipliers can be layered here if needed (e.g., file_search)
     timeout = base * tier_factor
+
+    # 3. Apply web_search multiplier if configured (in addition to model-specific timeout)
+    if web_search and "web_search" in mults:
+        web_search_factor = float(mults.get("web_search", 1.0))
+        timeout = timeout * web_search_factor
+
+    # 4. Cap at maxTimeout
     max_timeout = float(tcfg.get("maxTimeout", 43200))
     return min(timeout, max_timeout)
 
@@ -168,7 +206,12 @@ def _call_openai_responses(
     max_tokens = max_output_tokens or model_cfg.get("max_output_tokens")
 
     # Timeout policy
-    timeout = _compute_timeout(root_cfg, service_tier=service_tier)
+    timeout = _compute_timeout(
+        root_cfg,
+        service_tier=service_tier,
+        model_cfg=model_cfg,
+        web_search=web_search
+    )
     started = time.time()
     req_client = client.with_options(timeout=timeout)
 
@@ -335,7 +378,12 @@ def _call_xai_native(
     max_tokens = max_output_tokens or model_cfg.get("max_output_tokens")
 
     # Timeout policy
-    timeout = _compute_timeout(root_cfg, service_tier=service_tier)
+    timeout = _compute_timeout(
+        root_cfg,
+        service_tier=service_tier,
+        model_cfg=model_cfg,
+        web_search=web_search
+    )
     started = time.time()
 
     # Create xAI client

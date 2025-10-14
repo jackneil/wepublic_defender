@@ -54,6 +54,7 @@ setup(
             "wpd-review-pipeline=wepublic_defender.cli.review_pipeline:main",
             "wpd-file-log=wepublic_defender.cli.file_log:main",
             "wpd-deep-research-prompt=wepublic_defender.cli.deep_research_prompt:main",
+            "wpd-convert-to-word=wepublic_defender.cli.convert_to_word:main",
         ],
     },
     extras_require={

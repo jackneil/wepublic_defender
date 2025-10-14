@@ -111,6 +111,61 @@ If you try `--mode external-llm` with organize, it auto-falls back to guidance w
 
 ---
 
+## 🤖 Agent Orchestration Protocol (CRITICAL - READ AFTER EVERY AGENT RUN)
+
+**AFTER EVERY AGENT INVOCATION, YOU MUST CHECK FOR AND FOLLOW AGENT INSTRUCTIONS:**
+
+When you run any agent via `wpd-run-agent` or CLI commands, the agent result contains an optional `claude_prompt` field that tells you what to do next.
+
+### How It Works
+
+1. **Agents have domain expertise** - They know what their findings mean and can guide your next actions
+2. **You orchestrate the workflow** - Check the `claude_prompt` field after each agent run
+3. **Follow agent guidance** - The prompts tell you to summarize findings, ask questions, or recommend next steps
+
+### Example Agent Outputs
+
+#### Self Review Found Critical Issues
+```json
+{
+  "agent": "self_review",
+  "structured": {"critical_issues": ["Missing jurisdiction", "No legal standard"], ...},
+  "claude_prompt": "Found 2 CRITICAL issues that must be fixed before filing: Missing jurisdiction; No legal standard. Also 3 major and 5 minor issues. Present the critical issues as a bulleted list and ask if I should research solutions or if the user wants to review the full output first."
+}
+```
+
+**What to do:** Follow the prompt! List the critical issues, ask the user how they want to proceed.
+
+#### Citation Verification Passed
+```json
+{
+  "agent": "citation_verify",
+  "structured": [{...}, {...}],
+  "claude_prompt": "All 5 citations verified as good law and supporting our position. Briefly confirm this success and ask if user wants to proceed with next review step (opposing_counsel)."
+}
+```
+
+**What to do:** Confirm success to user, offer to run opposing_counsel next.
+
+### When Agent Returns `claude_prompt`
+
+✅ **DO:**
+- Read and follow the prompt instructions
+- Summarize findings for the user
+- Ask questions the prompt suggests
+- Recommend next actions from the prompt
+
+❌ **DON'T:**
+- Ignore the prompt and just say "Agent run complete"
+- Run next agent without user feedback if prompt asks questions
+- Blindly accept findings without the critical analysis the prompt may request
+
+### Why This Matters
+
+Agents with domain knowledge (legal review, citation verification) can intelligently guide the orchestration workflow based on what they find. This prevents you from just executing bash commands silently - you'll provide context-aware summaries and recommendations after each step.
+
+---
+
 ## 💻 OS Detection (FIRST THING EVERY SESSION)
 
 Check `<env>` tag for platform and remember for entire session:

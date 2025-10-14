@@ -16,11 +16,28 @@ This workflow helps you recover that context efficiently.
 
 This file will help you rebuild context without annoying the user with questions they already answered.
 
+## ⚠️ CRITICAL: Windows File Editing (READ FIRST)
+
+**If on Windows (`<env>` shows `win32`)**, you MUST use backslashes `\` in Edit/MultiEdit file paths:
+
+**❌ WRONG - Will cause errors:**
+```
+Edit(file_path: "C:/github/file.py", ...)
+```
+
+**✅ CORRECT - Always works:**
+```
+Edit(file_path: "C:\\github\\file.py", ...)
+```
+
+**Bash commands still use forward slashes `/`** - this is ONLY for Edit/MultiEdit tool paths.
+
+**This is a known bug in Claude Code** - Edit tool requires backslashes on Windows even though everything else uses forward slashes.
+
 ## 2. Check Environment Tag
 
 Look at `<env>` tag in system context for:
 - **Platform**: win32=Windows, darwin=Mac, linux=Linux
-  - Remember this for path syntax (Windows uses `\` in Edit tool, `/` in Bash)
 - **Working directory**: This is the case root directory
 - **Today's date**: For deadline awareness
 
