@@ -2,12 +2,54 @@
 
 So you got screwed by a corporation and can't afford a $400/hr lawyer. Welcome to the club.
 
-WePublicDefender is an LLM-guided case management system that helps you fight back pro se (that's Latin for "you're on your own, buddy"). It uses adversarial AI review to catch the stupid mistakes that would get your case thrown out.
+WePublicDefender is an LLM-guided case management system that helps you fight back pro se (that's Latin for "you're on your own, buddy"). But here's the thing: you're not just using "AI" - you're using **adversarial** AI.
 
-**Reality Check**: This is AI-powered legal research and document review. It is NOT a lawyer. It WILL make mistakes. The court doesn't care that "the AI told me to do it." Verify everything before you file, or enjoy explaining to the judge why you didn't.
+**How it works**: Multiple LLMs review your documents and argue with each other about what's wrong. GPT-5 finds issues. Grok-4 counters with different concerns. They fight until your document is bulletproof. It's like having a lawyer, their opposing counsel, and a paranoid law professor all reviewing your work before you file.
+
+**What it catches**: Missing jurisdiction statements. Weak legal standards. Unsupported factual claims. Citations that don't say what you think they say. The procedural tripwires that get pro se cases dismissed before the judge even reads your argument.
+
+**Reality Check**: This is AI-powered legal research and document review. It is NOT a lawyer. It WILL make mistakes. The court doesn't care that "the AI told me to do it." You still verify everything before filing. But you're verifying **after** multiple AIs have already torn your work apart and forced you to fix it.
+
+**The difference**: Most people filing pro se submit their first draft. You're submitting your tenth draft after surviving an AI firing squad. That's why this works.
+
+## How Claude Code Works - Choose Your Mode
+
+Claude Code has 3 operating modes. Understanding them is crucial for legal work:
+
+### 🤖 Auto-Accept Mode (Default)
+- Claude makes changes immediately without asking
+- **Don't use this for legal work** - too risky
+- Good for: Quick file organization, simple tasks
+
+### ✋ Manual Accept Mode
+- Claude proposes changes, you approve each one
+- More control but tedious for large reviews
+- Good for: Small edits, learning what Claude does
+
+### 📋 Plan Mode (RECOMMENDED FOR LEGAL WORK)
+- Claude presents a complete plan before doing anything
+- You review the strategy, then approve execution
+- **Use this when processing agent results**
+- Good for: Document reviews, research processing, anything important
+
+### How to Switch Modes
+- **Enter Plan Mode**: Type `/plan` or press Ctrl+P
+- **Exit Plan Mode**: Approve the plan when ready
+- **Manual Mode**: Settings → Edit Mode → "Manual Accept"
+
+### Best Practice for Legal Work
+
+1. Run an agent (self_review, citation_verify, opposing_counsel)
+2. **SWITCH TO PLAN MODE** before processing results
+3. Let Claude analyze findings and propose next steps
+4. Review the plan carefully
+5. Approve to execute
+
+**Why this matters**: Legal work requires deliberate decision-making. Plan mode forces you (and Claude) to think before acting. You catch mistakes before they become filed documents.
 
 ## Table of Contents
 
+- [How Claude Code Works - Choose Your Mode](#how-claude-code-works---choose-your-mode) - Understanding auto-accept, manual, and plan modes for legal work
 - [Step 0 - Get Your Shit Together](#step-0---get-your-shit-together-one-time-setup) - One-time setup: Claude CLI, terminal basics, API keys
 - [Step 1 - Central Setup](#step-1---central-setup-copy-paste-this-into-claude) - Copy-paste this into Claude to set everything up automatically
 - [Available Commands](#available-commands-what-you-can-tell-claude-to-do) - Slash commands and plain English instructions you can use
@@ -185,6 +227,23 @@ Just type the command. For example:
 
 Claude will do everything else. No technical knowledge required.
 
+### 🎯 Pro Tip: Use Plan Mode After Running Agents
+
+When you run agents like `/review` or get research results:
+
+1. **Switch to Plan Mode** (type `/plan` or Ctrl+P)
+2. Say: "Process the review results and propose next steps"
+3. Claude will present a plan addressing all findings
+4. Review it carefully - does it make sense?
+5. Approve to execute
+
+This prevents knee-jerk reactions to agent feedback and ensures you're making deliberate choices about your case strategy.
+
+### 🔮 Coming Soon
+
+Agents will eventually recommend mode switches in their output:
+> "Review complete. Switch to Plan Mode (type /plan) to process these findings systematically."
+
 ## How to Use Deep Research (Step-by-Step)
 
 **Important: Claude Code will automatically offer to run deep research when appropriate.** You rarely need to trigger this manually. This guide shows you what happens and how to complete the workflow when Claude suggests it.
@@ -283,6 +342,16 @@ Or just:
 ```
 Done
 ```
+
+**💡 Best Practice**: Switch to Plan Mode before saying you're done:
+
+1. Type `/plan` to enter Plan Mode
+2. Say "Done. I downloaded the research to the inbox."
+3. Claude will present a complete plan for processing results
+4. Review the plan (file organization, GAMEPLAN generation, next steps)
+5. Approve when ready
+
+This ensures you see exactly what Claude will do with the research before it happens.
 
 Claude Code will automatically:
 - Find the research file in `00_NEW_DOCUMENTS_INBOX/`
