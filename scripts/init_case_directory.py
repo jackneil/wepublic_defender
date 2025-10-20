@@ -382,11 +382,11 @@ def main():
 
     # IMPORTANT: Warn about needing to restart Claude Code for slash commands
     print("\n" + "="*60)
-    print("⚠️  IMPORTANT: RESTART CLAUDE CODE NOW")
+    print("*** IMPORTANT: RESTART CLAUDE CODE NOW ***")
     print("="*60)
     print("\nSlash commands have been installed to .claude/commands/")
     print("but Claude Code must be restarted to load them.")
-    print("\n📋 Steps:")
+    print("\nSteps:")
     print("  1. Exit Claude Code (Ctrl+C or close the window)")
     print("  2. Run 'claude' again in this same folder")
     print("  3. Slash commands like /deep-research-prep will now work")

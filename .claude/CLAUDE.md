@@ -61,6 +61,228 @@ To run single model: Use `--model <model_name>` flag.
 
 ---
 
+## 📊 Session & Case Tracking Protocol (CRITICAL - UPDATE CONSTANTLY)
+
+**TWO tracking files that MUST be kept updated throughout every session:**
+
+### 1. Session Notes (`.wepublic_defender/session_notes.md`)
+
+**Purpose**: Work tracking + crash recovery - your working memory and fallback if session crashes
+
+**Critical Use Case**: If Claude crashes mid-session, user can restart and Claude reads this file to know:
+- What task was being worked on
+- What the user's last request was
+- Recent context and decisions
+- What's been completed this session
+
+**Update Triggers** - Update IMMEDIATELY after:
+- Any agent invocation (self_review, citation_verify, opposing_counsel, drafter, etc.)
+- Any slash command (/organize, /review, /research, /draft, /strategy, etc.)
+- Completing any major research or drafting task
+- Finishing any document review or revision
+- Any significant work that takes >2 minutes
+- **BEFORE starting any task** (update "Currently Working On")
+- **IMMEDIATELY after user makes a request** (update "Last User Request")
+
+**How to Update**:
+
+1. **Currently Working On** section:
+   - When starting work: Add item to this section
+   - While working: Keep item here
+   - When finished: Move to "Completed This Session"
+   - Always keep this current - it's the crash recovery anchor
+
+2. **Last User Request** section:
+   - Update with exact user request when they ask for something
+   - Preserves context if session crashes mid-task
+
+3. **Recent Context** section:
+   - Important findings, blockers, decisions
+   - Things to remember for later in session
+   - Key context that affects future work
+
+4. **Completed This Session** section:
+   - Add timestamp when completing work
+   - Brief description of what was accomplished
+   - Most recent items at top (reverse chronological)
+
+**Example Update After Agent Run**:
+```markdown
+## 🎯 Currently Working On
+
+- [Nothing in progress - waiting for user direction]
+
+## ✅ Completed This Session
+
+### 2025-10-14 14:32
+- **Self-review agent (external-llm mode)**: Reviewed MOTION_TO_DISMISS_v3.md
+  - Found 2 critical issues (missing jurisdiction statement, weak legal standard)
+  - 4 major issues, 8 minor issues
+  - Detailed output in .wepublic_defender/reviews/
+
+### 2025-10-14 13:15
+- **Research**: Completed qualified immunity standard research
+  - Found 5 key Fourth Circuit cases
+  - Updated 06_RESEARCH/qualified_immunity_notes.md
+```
+
+**Update Method**:
+- Use Edit tool to update the file (remember backslashes on Windows!)
+- Read current state first, then append/modify
+- Keep format clean and scannable
+
+---
+
+### 2. Case Timeline (`.wepublic_defender/case_timeline.md`)
+
+**Purpose**: Permanent historical record of MAJOR COMPLETED case events - NOT work in progress
+
+**⚠️ CRITICAL DISTINCTION**: This is for completed major events that matter to case history. Track work-in-progress in session_notes.md instead.
+
+**✅ DO add to timeline:**
+- Documents FILED with court
+- Documents RECEIVED from court/opposing counsel
+- Communications SENT to court/opposing counsel
+- Major research COMPLETED (ready to use for drafting)
+- Court events (hearings, oral arguments, deadlines)
+- Discovery exchanged
+- Strategic pivots
+
+**❌ DO NOT add to timeline:**
+- Draft versions (v1, v2, v3) - track those in session_notes.md
+- Work in progress
+- Minor research tasks
+- Internal discussions
+- File organization
+
+**Entry Format**:
+```markdown
+### YYYY-MM-DD HH:MM - [EVENT_TYPE] - Brief Description
+
+**Status**: Filed | Received | Sent | Completed
+**Category**: Pleading | Discovery | Evidence | Communication | Research | Court Event | Strategy
+**File**: path/to/document (if applicable)
+**Notes**: Additional context relevant to case history
+
+---
+```
+
+**Event Types**:
+- 📄 DOCUMENT - Document filed or received (not drafts!)
+- 📨 COMMUNICATION - Email, letter sent/received
+- ⚖️ COURT_EVENT - Hearing, order, deadline
+- 🔍 RESEARCH - Major research completed
+- 📋 DISCOVERY - Discovery exchanged
+- 🎯 STRATEGY - Strategic decision
+
+**Example Timeline Entries (Major Completed Events Only)**:
+```markdown
+### 2025-10-15 09:00 - 📄 DOCUMENT - Motion to Dismiss Filed
+
+**Status**: Filed
+**Category**: Pleading
+**File**: 02_PLEADINGS/03_Motions/2025-10-14_MotionToDismiss_FINAL.pdf
+**Notes**: Filed via CM/ECF, case number 1:25-cv-00123. Hearing scheduled for 2025-11-05.
+
+---
+
+### 2025-10-14 12:00 - 📨 COMMUNICATION - Discovery Extension Request Sent
+
+**Status**: Sent
+**Category**: Communication
+**File**: 05_CORRESPONDENCE/01_With_Opposing_Counsel/2025-10-14_Discovery_Extension_Request.pdf
+**Notes**: Requested 30-day extension for discovery responses. Opposing counsel agreed verbally, confirming in writing.
+
+---
+
+### 2025-10-12 09:00 - ⚖️ COURT_EVENT - Order Granting Motion to Compel
+
+**Status**: Received
+**Category**: Court Event
+**File**: 02_PLEADINGS/04_Orders/2025-10-12_Order_Granting_Motion_to_Compel.pdf
+**Notes**: Court granted our motion to compel. Defendant must produce financial records within 14 days (deadline: 2025-10-26).
+
+---
+
+### 2025-10-10 16:00 - 🔍 RESEARCH - Qualified Immunity Standard Research Completed
+
+**Status**: Completed
+**Category**: Research
+**File**: 06_RESEARCH/qualified_immunity_notes.md
+**Notes**: Researched Fourth Circuit qualified immunity standard. Found 5 key cases supporting our position. Ready to incorporate into motion drafting.
+
+---
+```
+
+**Remember**: Draft versions (v1, v2, v3) get tracked in `session_notes.md`, NOT here. Only add to timeline when document is FILED or major research is COMPLETED and ready to use.
+
+**Update Method**:
+- Always insert new entries at TOP (reverse chronological)
+- Keep existing entries intact (never delete history)
+- Use consistent formatting
+- Include enough detail to understand event later
+
+---
+
+### Integration with Existing Tracking
+
+These files COMPLEMENT (not replace) existing tracking:
+
+- `.database/organization_log.md` - File movements and organization actions
+- `.database/file_management_index.json` - Index of processed files
+- `.wepublic_defender/usage_log.csv` - API usage and costs
+- `.wepublic_defender/reviews/` - Agent review outputs
+
+**Relationship**:
+- `session_notes.md` = "What am I doing RIGHT NOW and what did I just finish?"
+- `case_timeline.md` = "What happened in this case and when?"
+- `.database/` files = "What files have been moved/processed?"
+
+---
+
+### When to Update (Checklist)
+
+**✅ ALWAYS update `session_notes.md` after:**
+- EVERY agent run (what it found/did)
+- EVERY slash command (what happened)
+- Starting ANY task (update "Currently Working On")
+- Completing ANY task (move to "Completed This Session")
+- User makes a request (update "Last User Request")
+- Any significant work that takes >2 minutes
+
+**✅ ONLY update `case_timeline.md` for major completed events:**
+
+**Documents:**
+- When FILED with court → Add entry
+- When RECEIVED from court/opposing counsel → Add entry
+- ❌ NOT when drafting (v1, v2, v3) - track in session_notes instead
+- ❌ NOT when finalizing - only when FILED
+
+**Communications:**
+- Email/letter SENT to court/opposing counsel → Add entry
+- Email/letter RECEIVED from court/opposing counsel → Add entry
+
+**Research:**
+- Major research COMPLETED and ready to use → Add entry
+- ❌ NOT work-in-progress research - track in session_notes instead
+
+**Court Events:**
+- Court order RECEIVED → Add entry
+- Hearing scheduled → Add entry
+- Deadline imposed by court → Add entry
+
+**Discovery:**
+- Discovery request/response EXCHANGED → Add entry
+
+**Strategy:**
+- Major strategic decision made → Add entry
+
+**Remember the distinction:**
+- `session_notes.md` = Everything you're doing right now (drafts, revisions, work in progress)
+- `case_timeline.md` = Major events that are complete and matter to case history (filings, orders, completed research)
+
+---
+
 ## 🎯 Agent Mode Architecture (CRITICAL)
 
 **ALL agents support TWO operating modes:**
@@ -103,11 +325,14 @@ To run single model: Use `--model <model_name>` flag.
 # Cost: Depends on document size, models, web search
 ```
 
-### Special Case: Organize Agent
+### Special Cases: Agents That ONLY Support Guidance Mode
 
-`organize` agent **ONLY** operates in guidance mode - external LLMs cannot access file system.
+**`organize` and `fact_verify` agents ONLY operate in guidance mode** - external LLMs cannot access file system.
 
-If you try `--mode external-llm` with organize, it auto-falls back to guidance with warning.
+- `organize`: Needs to read/move files on disk
+- `fact_verify`: Needs to read evidence documents from `04_EVIDENCE/` to verify claims
+
+If you try `--mode external-llm` with these agents, they auto-fall back to guidance with warning.
 
 ---
 
@@ -116,6 +341,98 @@ If you try `--mode external-llm` with organize, it auto-falls back to guidance w
 **AFTER EVERY AGENT INVOCATION, YOU MUST CHECK FOR AND FOLLOW AGENT INSTRUCTIONS:**
 
 When you run any agent via `wpd-run-agent` or CLI commands, the agent result contains an optional `claude_prompt` field that tells you what to do next.
+
+### 🔴 PIPELINE RE-VALIDATION ORCHESTRATION
+
+**THE GOLDEN RULE**: If ANY agent made changes, you MUST re-run the ENTIRE pipeline from the beginning.
+
+#### How to Track Pipeline Changes:
+
+```python
+# Your mental model for tracking:
+pipeline_changes = {
+    "run_number": 1,
+    "phase_1_self_review": 0,
+    "phase_2_citations": 0,
+    "phase_3_opposing": 0,
+    "phase_4_final": 0,
+    "total": 0
+}
+
+# After each agent run, check claude_prompt:
+if "Must fix" in claude_prompt or "Will need to replace" in claude_prompt:
+    # Extract number and add to total
+    changes = extract_number_from_prompt()
+    pipeline_changes["total"] += changes
+```
+
+#### Decision Tree After Each Agent:
+
+```
+Agent returns claude_prompt
+    ↓
+Contains "Must fix X" or "Will need to replace X"?
+    YES → Fix issues, track changes
+    NO → Check "CLEAN PASS"?
+        ↓
+After ALL phases complete:
+    ↓
+Total changes > 0?
+    YES → RESTART ENTIRE PIPELINE FROM PHASE 1
+    NO → PROCEED TO FINALIZATION
+```
+
+#### Example Pipeline Execution:
+
+```
+=== PIPELINE RUN #1 ===
+Self-Review: "Must fix 3 critical issues" → Fix them → Changes: 3
+Citations: "Replace 2 bad citations" → Replace them → Changes: 2
+Opposing: "Fix 1 weakness" → Strengthen → Changes: 1
+Fact Verify: "Wrong date, unsupported claim" → Fix them → Changes: 2
+Final: "Fix formatting" → Fix it → Changes: 1
+Total: 9 changes → ⚠️ MUST RESTART FROM PHASE 1
+
+=== PIPELINE RUN #2 ===
+Self-Review: "Fix 1 major issue" → Fix it → Changes: 1
+Citations: "CLEAN PASS" → Changes: 0
+Opposing: "CLEAN PASS" → Changes: 0
+Fact Verify: "CLEAN PASS" → Changes: 0
+Final: "CLEAN PASS" → Changes: 0
+Total: 1 change → ⚠️ MUST RESTART FROM PHASE 1
+
+=== PIPELINE RUN #3 ===
+Self-Review: "CLEAN PASS" → Changes: 0
+Citations: "CLEAN PASS" → Changes: 0
+Opposing: "CLEAN PASS" → Changes: 0
+Fact Verify: "CLEAN PASS" → Changes: 0
+Final: "CLEAN PASS" → Changes: 0
+Total: 0 changes → ✅ PROCEED TO FINALIZATION
+```
+
+#### Key Phrases in claude_prompt That Require Action:
+
+**Indicates changes needed (and pipeline re-run):**
+- "Must fix X critical issues"
+- "Will need to replace X citations"
+- "Should fix X major weaknesses"
+- "After fixing, you MUST re-run the ENTIRE pipeline"
+
+**Indicates clean pass (but check total):**
+- "CLEAN PASS - NO CHANGES NEEDED"
+- "All citations verified as good law"
+- "No critical or major weaknesses"
+- "If ANY previous phases made changes, you MUST re-run entire pipeline"
+
+#### Why This Matters:
+
+Legal documents are **interconnected systems** where:
+- Fixing jurisdiction affects standing
+- New citations might not support revised arguments
+- Strengthening one argument can contradict another
+- Only a ZERO-CHANGE pass guarantees consistency
+
+**NEVER** skip re-validation. **ALWAYS** restart from Phase 1 if changes were made.
 
 ### How It Works
 
@@ -164,6 +481,22 @@ When you run any agent via `wpd-run-agent` or CLI commands, the agent result con
 
 Agents with domain knowledge (legal review, citation verification) can intelligently guide the orchestration workflow based on what they find. This prevents you from just executing bash commands silently - you'll provide context-aware summaries and recommendations after each step.
 
+### ⚠️ AFTER FOLLOWING AGENT GUIDANCE: UPDATE TRACKING FILES
+
+**MANDATORY after EVERY agent run:**
+
+1. **Update `session_notes.md`**:
+   - Add what agent found/did to "Completed This Session"
+   - Clear "Currently Working On" if task is complete
+   - Update "Recent Context" if agent revealed blockers or important findings
+
+2. **Update `case_timeline.md` ONLY if major event occurred**:
+   - Document finalized and FILED with court
+   - Major research COMPLETED and ready to use
+   - ❌ NOT for drafts, work in progress, or reviews
+
+This ensures crash recovery works and case history stays current. See "Session & Case Tracking Protocol" section above for full details.
+
 ---
 
 ## 💻 OS Detection (FIRST THING EVERY SESSION)
@@ -178,6 +511,22 @@ Check `<env>` tag for platform and remember for entire session:
 **Mac/Linux (darwin/linux)**:
 - All paths: forward slashes `/`
 - Shell commands: `cp`, `mv`, `rm`, `ls`
+
+---
+
+## 🪟 Windows Unicode (CRITICAL)
+
+**Windows console crashes on Unicode characters (cp1252 encoding).**
+
+**NEVER use in output:**
+- Emojis: 🔴 ✅ 📄 ⚠️ → Use text: [CRITICAL] [OK] WARNING:
+- Bullets: • ● ▪ → Use: - * >
+- Checkboxes: ☐ ☑ ✓ → Use: [ ] [X]
+- Special chars: — " " ' ' → Use: -- " " ' '
+
+**Rule: If it's not on a US keyboard, don't print it to console.**
+
+Stick to: A-Z, 0-9, and basic symbols: - * [ ] ! ? . , : ; " ' ( ) / \ | _
 
 ---
 
@@ -230,11 +579,21 @@ Standard directory structure (maintained by `/organize` command):
 
 - **`/check-env`** - Check Python environment and API keys
 - **`/organize`** - Organize files from inbox (guidance-only, always free)
+- **`/timeline [action]`** - View/update case timeline and document history
 - **`/deep-research-prep`** - Generate comprehensive prompt for Claude.ai Deep Research
 - **`/research [topic]`** - Quick legal research on specific topic
 - **`/strategy`** - Get strategic recommendations
 - **`/draft [type]`** - Draft legal document
 - **`/review [file]`** - Run adversarial review
+
+### Utility Commands
+
+- **`wpd-pdf-to-images <pdf_path>`** - Convert large PDF to images for Claude to read
+  - Use when PDFs are too large (>25K tokens) for Claude to process directly
+  - Common use cases: Credit reports, lengthy court orders, large exhibits
+  - Example: `wpd-pdf-to-images "F:/capitalone/credit_report.pdf"`
+  - Creates folder with numbered page images: `page_0001.png`, `page_0002.png`, etc.
+  - Then use Read tool on individual pages: `Read(file_path="credit_report_images/page_0001.png")`
 
 See `.claude/COMMANDS_REFERENCE.md` for detailed command documentation.
 
@@ -258,6 +617,36 @@ Use full Python path from env_info.json:
 
 # Run agent (external-llm mode - costs money)
 <python_path> -m wepublic_defender.cli.run_agent --agent citation_verify --file draft.md --mode external-llm --web-search
+```
+
+### PDF to Images Converter
+
+When PDFs are too large for Claude to read directly (>25K tokens), convert them to images:
+
+```bash
+# Convert PDF to images (uses wpd-pdf-to-images command from setup.py entry point)
+<python_path> -m wepublic_defender.utils.pdf_to_images "F:/path/to/document.pdf"
+
+# Or use CLI command if installed
+wpd-pdf-to-images "F:/path/to/document.pdf"
+
+# Specify output directory
+wpd-pdf-to-images "document.pdf" --output-dir "F:/images"
+
+# Use higher quality
+wpd-pdf-to-images "document.pdf" --dpi 300
+```
+
+**Common use cases:**
+- Credit reports (often 50-100+ pages)
+- Lengthy court orders or opinions
+- Large discovery exhibits
+- Settlement agreements with extensive attachments
+
+**After conversion**, read individual pages:
+```
+Read(file_path="F:/path/to/document_images/page_0001.png")
+Read(file_path="F:/path/to/document_images/page_0002.png")
 ```
 
 ### Multi-Model Behavior

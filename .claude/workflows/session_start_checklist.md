@@ -26,9 +26,16 @@ Edit(file_path: "C:\\github\\file.py", ...)
 
 Read these files to understand current state (read silently, don't output full contents):
 
-1. **GAMEPLAN.md** - Current strategy, next steps, deadlines
-2. **01_CASE_OVERVIEW/case_summary.md** (if exists) - Case basics
-3. Check for `00_NEW_DOCUMENTS_INBOX/` contents - New files to organize?
+1. **`.wepublic_defender/session_notes.md`** - Last session's work and current status
+2. **`.wepublic_defender/case_timeline.md`** - Recent case events and document status
+3. **GAMEPLAN.md** - Current strategy, next steps, deadlines
+4. **01_CASE_OVERVIEW/case_summary.md** (if exists) - Case basics
+5. Check for `00_NEW_DOCUMENTS_INBOX/` contents - New files to organize?
+
+**IMPORTANT**: Update `session_notes.md` at the start of session:
+- Clear "Currently Working On" section (set to "[Nothing in progress - ready for next task]")
+- Keep "Completed This Session" from last session for continuity
+- Add new date section when you complete first task of new session
 
 ## 2. Check for New Files in Inbox
 
