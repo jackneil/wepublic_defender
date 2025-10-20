@@ -46,7 +46,28 @@ Break down the topic into specific legal questions:
 
 ### STEP 2: SEARCH STRATEGY
 
-**Primary Authority Search** (DO THIS FIRST):
+**FIRST: Check for Existing Research** (Use Explore):
+
+Before starting external research, check if you've already researched this topic:
+
+**Use Explore subagent to search efficiently:**
+```
+Use Explore to search 06_RESEARCH/ for documents about {topic}
+```
+
+**Why this matters:**
+- Saves time by finding prior research
+- Avoids duplicate research costs
+- Builds on previous findings
+- Prevents contradicting earlier analysis
+
+**If prior research found:**
+1. Read the existing research file
+2. Assess if it's still current (check dates on cases)
+3. Determine if additional research needed
+4. Update existing file rather than create duplicate
+
+**Primary Authority Search** (DO THIS NEXT):
 
 **For Case Law:**
 - Web search: "{topic} {jurisdiction} case law"

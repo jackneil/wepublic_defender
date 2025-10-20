@@ -429,6 +429,97 @@ Claude Code has 3 operating modes. Understanding them is crucial for legal work:
 
 **Why this matters**: Legal work requires deliberate decision-making. Plan mode forces you (and Claude) to think before acting. You catch mistakes before they become filed documents.
 
+### 🧠 Claude Code 2.0.22+ Features
+
+Recent Claude Code updates include powerful features for legal work:
+
+#### Tab Key: Toggle Claude's Thinking Process
+
+**What it does**: Press Tab to show/hide Claude's internal reasoning
+
+**Why it matters for legal work:**
+- See Claude's analysis before it proposes changes
+- Understand WHY Claude recommends certain fixes
+- Catch faulty reasoning before accepting suggestions
+- Learn legal concepts by watching Claude reason through them
+
+**How to use:**
+```
+1. Claude starts processing agent results
+2. Press Tab → see Claude's reasoning appear in real-time
+3. Press Tab again → hide reasoning, keep output clean
+4. Review reasoning whenever uncertain about recommendations
+```
+
+**Example thinking you'll see:**
+```
+<thinking>
+The opposing_counsel agent found the arbitration clause weakness.
+I should check if we have any waiver arguments...
+Looking at case timeline - defendant litigated merits for 3 months.
+That's likely waiver of arbitration. Should add section addressing this.
+</thinking>
+```
+
+**Best practice**: Keep thinking visible when processing complex agent results (citation verification, opposing counsel attacks). Hide it for simple tasks.
+
+#### /bashes: Monitor Background Tasks
+
+**What it does**: Shows all running background processes and their status
+
+**Why it matters for legal work:**
+- Long-running agent calls (external-llm mode) auto-background in Claude Code 2.0.22+
+- Check if citation verification still running (can take 3-5 minutes with web search)
+- Monitor multiple parallel agent calls
+- Debug when processes seem stuck
+
+**How to use:**
+```
+Type: /bashes
+
+You'll see:
+Shell ID | Command | Status | Runtime
+---------|---------|--------|--------
+bash_1   | wpd-run-agent citation_verify | Running | 2m 34s
+bash_2   | wpd-run-agent opposing_counsel | Running | 1m 12s
+```
+
+**When to check:**
+- Agent seems to be taking a long time
+- Running multiple agents in parallel
+- Want to verify process didn't crash
+- Checking if web search is still working
+
+**Common scenarios:**
+
+*Citation verification with web search:*
+```
+You: /review draft.md
+
+Claude runs citation_verify with web search...
+[2 minutes pass]
+
+You: /bashes
+
+Shows: citation_verify still running, 3m 45s elapsed
+Expected: 3-5 minutes for large documents, this is normal
+```
+
+*Multiple parallel agents:*
+```
+Claude: Running self_review and opposing_counsel in parallel...
+
+You: /bashes
+
+Shows:
+- self_review: Complete, 2m 14s
+- opposing_counsel: Running, 4m 56s
+
+Wait for both to finish before processing results.
+```
+
+**No more timeout workarounds needed**: Claude Code 2.0.22+ automatically backgrounds long-running commands instead of killing them at 2 minutes. The /bashes command lets you monitor progress.
+
 ## Table of Contents
 
 - [How Claude Code Works - Choose Your Mode](#how-claude-code-works---choose-your-mode) - Understanding auto-accept, manual, and plan modes for legal work

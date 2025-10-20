@@ -684,65 +684,60 @@ Override:
 --run-both
 ```
 
-###  ⏱️ Bash Command Timeouts for LLM Agent Calls (CRITICAL)
+### ⏱️ Long-Running Commands and Auto-Backgrounding
 
-**ALWAYS specify extended timeout when running agents in external-llm mode via Bash.**
+**Claude Code 2.0.22+ automatically backgrounds long-running bash commands.**
 
-The Bash tool has a default 120-second (2-minute) timeout that will kill long-running LLM calls even if the Python/LLM timeouts are configured longer.
+**No more manual timeout workarounds needed!** Claude monitors background tasks and can check their progress.
 
-#### Required Timeout
+#### How It Works
 
-- **Minimum: 600000ms (10 minutes)** for any `--mode external-llm` command
-- Applies to ALL agents: self_review, citation_verify, opposing_counsel, drafter, etc.
-- Without this parameter, Bash will terminate the process at exactly 2 minutes
+Long-running commands (like external-llm agent calls) automatically move to background if they take too long:
+- Bash tool auto-backgrounds instead of killing commands
+- Claude monitors logs in real-time
+- Can debug from logs when processes crash
+- Use `/bashes` command to check running tasks
 
-#### Why This Matters
+#### Running Agent Commands
 
-- Large documents (10K+ tokens) with web search can take 3-5 minutes per model
-- Running 2 models in parallel means waiting for the slower one to complete
-- gpt-5 with high reasoning effort can take 2-4 minutes for complex legal documents
-- Grok-4 with web search may take 1-3 minutes depending on search results
-
-#### Correct Usage
-
-✅ **CORRECT - Includes timeout parameter:**
+**Simple - just run them:**
 
 ```python
+# Automatically backgrounds if needed (citation verification with web search, etc.)
 Bash(
-    command="C:/Users/jack/.conda/envs/wepublic_defender/python.exe -m wepublic_defender.cli.run_agent --agent self_review --file draft.md --mode external-llm --verbose",
-    description="Run self_review agent",
-    timeout=600000  # 10 minutes - REQUIRED!
+    command="C:/Users/jack/.conda/envs/wepublic_defender/python.exe -m wepublic_defender.cli.run_agent --agent citation_verify --file draft.md --mode external-llm --web-search",
+    description="Run citation verification"
 )
 ```
 
-❌ **WRONG - Will timeout at 2 minutes:**
+**No more `timeout=600000` required** for most operations.
+
+#### Checking Background Task Status
+
+User can type `/bashes` to see:
+- All running background shells
+- Command being executed
+- Runtime
+- Status (running/completed)
+
+#### When to Still Use Timeout
+
+Rarely needed, but specify timeout if you need a command to fail after specific time:
 
 ```python
-Bash(
-    command="C:/Users/jack/.conda/envs/wepublic_defender/python.exe -m wepublic_defender.cli.run_agent --agent self_review --file draft.md --mode external-llm --verbose",
-    description="Run self_review agent"
-    # Missing timeout parameter - will be killed at 120 seconds!
-)
+# Force timeout after 5 minutes (rare)
+Bash(command="...", timeout=300000)
 ```
-
-#### When to Use Extended Timeout
-
-Always use `timeout=600000` for:
-- Any `--mode external-llm` agent call
-- Any `--run-both` flag (runs 2 models in parallel)
-- Any agent with `--web-search` enabled
-- Any operation on documents > 5,000 tokens
-- Citation verification (always needs extended timeout)
 
 #### Incremental Result Saving
 
-The CLI automatically saves each model's results immediately upon completion to `.wepublic_defender/reviews/` directory. This prevents data loss if one model times out while the other completes successfully.
+The CLI automatically saves each model's results immediately upon completion to `.wepublic_defender/reviews/` directory. This prevents data loss if process crashes.
 
 Results are saved as:
 - JSON: `.wepublic_defender/reviews/{agent}_{model}_{timestamp}.json`
 - Markdown: `.wepublic_defender/reviews/{agent}_{model}_{timestamp}.md`
 
-This means even if the Bash command times out, any models that completed before the timeout will have their results preserved.
+Even if command backgrounds or times out, completed models have results preserved.
 
 ---
 

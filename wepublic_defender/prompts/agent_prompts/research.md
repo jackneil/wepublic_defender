@@ -264,6 +264,40 @@ Research settlements/verdicts for:
 
 ## Search Methodology
 
+### Step 0: Check for Prior Research (Use Explore First)
+
+**BEFORE launching expensive external research, check if you've already researched this:**
+
+**Use Explore subagent to find existing research efficiently:**
+
+```
+Use Explore to search 06_RESEARCH/ for documents about [topic/statute/defendant]
+```
+
+**Common Explore queries:**
+- "qualified immunity" - Find prior immunity research
+- "FCRA" - Locate Fair Credit Reporting Act research
+- "motion to dismiss" - Find related procedural research
+- "damages calculation" - Find prior damage analysis
+- "[defendant name]" - Prior research on same defendant
+
+**Why this saves money and time:**
+- Avoid re-researching same topics (wastes $$$)
+- Build on previous findings
+- Ensure consistency across documents
+- Discover related research you forgot about
+
+**If Explore finds existing research:**
+1. Read the prior research file first
+2. Check if still current (case dates, statute versions)
+3. Build on findings rather than duplicate work
+4. Update prior file instead of creating new one
+
+**If Explore finds nothing:**
+- You're breaking new ground - proceed with full research
+- This will become the authoritative file for future use
+- Make it comprehensive so you don't have to re-research
+
 ### Primary Sources (Start Here)
 1. **Westlaw/Lexis**: Full case law and statutes
 2. **Google Scholar**: Free case law and articles

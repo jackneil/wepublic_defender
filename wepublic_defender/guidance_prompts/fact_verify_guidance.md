@@ -103,6 +103,52 @@ For each fact, verify:
    - Damages lacking proof
    - Timeline gaps
 
+## EFFICIENT EVIDENCE SEARCH WITH EXPLORE SUBAGENT
+
+**Use the Explore subagent for efficient evidence searching** instead of reading every file in large evidence folders.
+
+### When to Use Explore
+
+Use the Explore subagent (Haiku 4.5 powered) when:
+- Searching for specific dates across many documents
+- Finding documents mentioning specific amounts
+- Locating communications with specific parties
+- Searching for keywords across 04_EVIDENCE/, 03_DISCOVERY/, or 05_CORRESPONDENCE/
+
+### How to Use Explore
+
+**Pattern matching:**
+```
+Use Explore to find files in 04_EVIDENCE/ matching "*contract*" or "*agreement*"
+```
+
+**Keyword search:**
+```
+Use Explore to search 04_EVIDENCE/ for documents containing "January 15, 2024"
+```
+
+**Multiple locations:**
+```
+Use Explore to search both 04_EVIDENCE/ and 03_DISCOVERY/ for "$125,000" or references to the settlement
+```
+
+### Why This Matters
+
+- **Saves tokens**: Explore searches efficiently without reading every file
+- **Faster verification**: Quickly locate relevant evidence documents
+- **Thorough coverage**: Search across multiple folders systematically
+- **Context preservation**: Don't waste context window on irrelevant files
+
+### Explore Workflow Example
+
+1. **Extract fact**: "Plaintiff paid $125,000 on January 15, 2024"
+2. **Use Explore**: Search 04_EVIDENCE/ for "125000" or "January 15, 2024"
+3. **Review results**: Explore returns matching file list
+4. **Read specific files**: Use Read tool only on relevant matches
+5. **Verify fact**: Confirm exact match in source document
+
+**Remember**: Explore is for FINDING evidence efficiently. You still need to READ the actual documents to verify facts.
+
 ## CRITICAL OUTPUT STRUCTURE
 
 Your response MUST identify:
