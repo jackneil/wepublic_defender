@@ -263,9 +263,69 @@ def create_symlinks():
     except Exception as e:
         print(f"  [WARN] Failed to copy .claude/protocols: {e}")
 
+    # Copy/merge .claude/templates (session notes, timeline templates)
+    templates_src = repo_root / ".claude" / "templates"
+    templates_dst = base_path / ".claude" / "templates"
+    try:
+        if templates_src.exists():
+            templates_dst.mkdir(parents=True, exist_ok=True)
+            for item in templates_src.rglob("*"):
+                if item.is_file():
+                    rel = item.relative_to(templates_src)
+                    dst_file = templates_dst / rel
+                    dst_file.parent.mkdir(parents=True, exist_ok=True)
+                    import shutil
+                    shutil.copy2(item, dst_file)
+                    print(f"  [COPIED] .claude/templates/{rel}")
+    except Exception as e:
+        print(f"  [WARN] Failed to copy .claude/templates: {e}")
+
     # Create .database for state tracking (file management logs, etc.)
     db_dir = base_path / ".database"
     db_dir.mkdir(parents=True, exist_ok=True)
+
+    # README explaining .database/
+    db_readme = db_dir / "README.md"
+    if not db_readme.exists():
+        db_readme.write_text(
+            "# .database Directory\n\n"
+            "This directory tracks file management state to prevent duplicate work and provide audit trail.\n\n"
+            "**IMPORTANT:** This directory is per-case and should NOT be committed to git (.gitignored).\n\n"
+            "## Files\n\n"
+            "### file_management_log.md\n"
+            "Human-readable ledger of all file management actions.\n\n"
+            "Format: `timestamp | action | src | dst | notes`\n\n"
+            "Example:\n"
+            "```\n"
+            "2025-10-20 14:30:00 | moved | 00_NEW_DOCUMENTS_INBOX/doc.pdf | 02_PLEADINGS/03_Motions/MOTION.pdf | Categorized as motion\n"
+            "```\n\n"
+            "### file_management_index.json\n"
+            "JSON index keyed by file path for quick lookup.\n\n"
+            "Used to check: \"Have I already processed this file?\"\n\n"
+            "Format:\n"
+            "```json\n"
+            "{\n"
+            '  "path/to/file.pdf": {\n'
+            '    "timestamp": "2025-10-20 14:30:00",\n'
+            '    "action": "moved",\n'
+            '    "src": "00_NEW_DOCUMENTS_INBOX/doc.pdf",\n'
+            '    "dst": "02_PLEADINGS/03_Motions/MOTION.pdf",\n'
+            '    "notes": "Categorized as motion"\n'
+            "  }\n"
+            "}\n"
+            "```\n\n"
+            "## Usage\n\n"
+            "- `/organize` command reads index to skip already-processed files\n"
+            "- SessionStart hook reports organization stats if available\n"
+            "- Provides crash recovery - know what's been done even if session crashes\n\n"
+            "## Relationship to Other Tracking\n\n"
+            "- `.database/` = File movements and organization\n"
+            "- `.wepublic_defender/session_notes.md` = Current work in progress\n"
+            "- `.wepublic_defender/case_timeline.md` = Major case events (filings, orders, etc.)\n",
+            encoding="utf-8",
+        )
+        print("  [CREATED] .database/README.md")
+
     fm_log = db_dir / "file_management_log.md"
     if not fm_log.exists():
         fm_log.write_text(
@@ -278,7 +338,7 @@ def create_symlinks():
 
     fm_index = db_dir / "file_management_index.json"
     if not fm_index.exists():
-        fm_index.write_text("[]", encoding="utf-8")
+        fm_index.write_text("{}", encoding="utf-8")
         print("  [CREATED] .database/file_management_index.json")
 
 def create_gameplan():

@@ -234,7 +234,7 @@ For each file in the inbox, determine:
 
 **Duplicate Files:**
 - Check if already organized
-- Read `.database/organization_index.json`
+- Read `.database/file_management_index.json`
 - Skip if already processed
 - Note in log if duplicate found
 
@@ -249,14 +249,14 @@ For each file in the inbox, determine:
 
 **After Each Move:**
 
-**1. Update Organization Log (`.database/organization_log.md`)**
+**1. Update File Management Log (`.database/file_management_log.md`)**
 
 Append one line:
 ```
 2025-10-13 14:30:00 | moved | 00_NEW_DOCUMENTS_INBOX/doc.pdf | 02_PLEADINGS/03_Motions/MOTION_TO_DISMISS_2025-10-13.pdf | Categorized as motion based on court caption and content
 ```
 
-**2. Update Organization Index (`.database/organization_index.json`)**
+**2. Update File Management Index (`.database/file_management_index.json`)**
 
 Add entry:
 ```json
@@ -323,8 +323,8 @@ Add entry:
 
 ## State Tracking Updated
 
-- Organization log updated: `.database/organization_log.md`
-- Organization index updated: `.database/organization_index.json`
+- File management log updated: `.database/file_management_log.md`
+- File management index updated: `.database/file_management_index.json`
 
 ---
 
@@ -351,8 +351,8 @@ Before completing organization:
 - [ ] I checked for existing organization (avoid duplicates)
 - [ ] I used meaningful filenames
 - [ ] I moved files to appropriate subdirectories
-- [ ] I updated organization log
-- [ ] I updated organization index
+- [ ] I updated file management log
+- [ ] I updated file management index
 - [ ] I noted any uncertain classifications
 - [ ] I provided clear reasoning for each decision
 

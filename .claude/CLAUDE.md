@@ -251,7 +251,7 @@ To run single model: Use `--model <model_name>` flag.
 
 These files COMPLEMENT (not replace) existing tracking:
 
-- `.database/organization_log.md` - File movements and organization actions
+- `.database/file_management_log.md` - File movements and organization actions
 - `.database/file_management_index.json` - Index of processed files
 - `.wepublic_defender/usage_log.csv` - API usage and costs
 - `.wepublic_defender/reviews/` - Agent review outputs
@@ -757,17 +757,28 @@ This means even if the Bash command times out, any models that completed before 
 
 ## 💾 State Tracking (.database)
 
-Claude manages lightweight state directly:
+The `.database/` directory (per-case, in case root) tracks file management state to prevent duplicate work.
 
-**Ledger**: `.database/organization_log.md`
+**Created during case initialization**. Contains:
+
+**Ledger**: `.database/file_management_log.md`
 - Format: `timestamp | action | src | dst | notes`
 - Append one line per file management action
+- Human-readable audit trail
 
-**Index**: `.database/organization_index.json`
-- JSON object keyed by path
+**Index**: `.database/file_management_index.json`
+- JSON object keyed by file path
 - Tracks what's been processed to avoid duplicate work
+- Quick lookup: "Have I processed this file?"
 
-Read index before organizing to skip already-processed files/folders.
+**README**: `.database/README.md`
+- Explains purpose and usage
+- Documents file formats
+
+**Usage:**
+- Read index before organizing to skip already-processed files
+- Check during session start for organization stats
+- Never commit `.database/` contents (gitignored)
 
 ---
 
