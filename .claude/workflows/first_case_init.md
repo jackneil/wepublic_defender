@@ -179,15 +179,19 @@ Save to `GAMEPLAN.md` and tell user:
 
 **MANDATORY**: Create the session and case tracking files from templates.
 
+**⚠️ PATH CONTEXT**: After running `init_case`, templates have been copied to the CASE DIRECTORY at `.claude/templates/`. Both template reads and output writes use paths relative to the case directory (working directory).
+
 ### Create Session Notes
 
 Copy from template and customize:
 
 ```bash
-# Read template
+# Read template from CASE DIRECTORY
 Read: .claude/templates/session_notes_template.md
 
-# Create with current timestamp
+# Create in CASE DIRECTORY (working directory)
+# Use relative path: .wepublic_defender/session_notes.md
+# Or absolute: <working_dir>/.wepublic_defender/session_notes.md
 Write: .wepublic_defender/session_notes.md
 ```
 
@@ -232,7 +236,6 @@ Create `.wepublic_defender/case_initialized.json`:
   "gameplan_generated": true|false,
   "python_exe": "/path/to/python.exe",
   "conda_env": "wepublic_defender",
-  "repo_path": "/path/to/wepublic_defender",
   "tracking_files_created": true
 }
 ```
