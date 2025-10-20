@@ -82,51 +82,161 @@ From GAMEPLAN.md "Immediate Next Steps" section:
 >
 > (If user agrees, run `/strategy` or offer deep research if case is new)
 
-## 5. Offer Relevant Help
+## 5. Detect Case Stage and Present Options
 
-Based on case status and user's likely needs:
+**IMPORTANT**: Intelligently detect where user is in case lifecycle and present stage-appropriate multiple choice questions.
 
-### If Case Needs Research:
-- `06_RESEARCH/` is empty or sparse
-- GAMEPLAN mentions "research needed"
-- Legal issues are not well-defined
+### Stage Detection Logic
 
-**Offer:**
-> "I notice you don't have much research yet. Would you like to:
-> 1. `/deep-research-prep` - Generate comprehensive research prompt for Claude.ai (best for starting new case)
-> 2. `/research [topic]` - Quick research on a specific legal question
-> 3. `/strategy` - Get strategic recommendations on what to research first"
+Check these indicators to determine case stage (check in order, first match wins):
 
-### If Case Needs Drafting:
-- Research exists in `06_RESEARCH/`
-- GAMEPLAN says "draft [document]"
-- `07_DRAFTS_AND_WORK_PRODUCT/` is empty or drafts are outdated
+#### PRE-FILING Indicators:
+- No `02_PLEADINGS/01_Complaint/` folder exists OR folder is empty
+- `04_EVIDENCE/` has files but no complaint filed
+- `case_timeline.md` shows investigation/evidence gathering phase
+- GAMEPLAN mentions "investigating claim" or "assess viability"
 
-**Offer:**
-> "You have research completed. Would you like to draft a document? I can help with:
-> - `/draft [motion to dismiss / response / complaint / discovery]`
-> - Or tell me what you need to write"
+#### DISCOVERY Indicators:
+- `03_DISCOVERY/` folder exists with files from last 60 days
+- `case_timeline.md` shows discovery deadlines or discovery exchanges
+- Pending discovery requests/responses in `03_DISCOVERY/`
+- GAMEPLAN mentions "discovery" or "interrogatories" or "depositions"
 
-### If Draft Needs Review:
-- Files exist in `07_DRAFTS_AND_WORK_PRODUCT/`
-- GAMEPLAN says "review before filing"
-- No recent review results in `.wepublic_defender/reviews/`
+#### MOTION PRACTICE Indicators:
+- `02_PLEADINGS/03_Motions/` has files modified within last 45 days
+- `case_timeline.md` shows motion deadlines or motion hearings
+- Opposition briefs exist in `07_DRAFTS_AND_WORK_PRODUCT/`
+- GAMEPLAN mentions specific motions (dismiss, summary judgment, compel, etc.)
 
-**Offer:**
-> "I see you have drafts in progress. Before filing, would you like me to review:
-> - `/review [filename]` - Run adversarial review (opposing counsel attack, citation verification, final review)
-> - I'll check for weaknesses, bad citations, and procedural issues"
+#### TRIAL PREP Indicators:
+- `case_timeline.md` explicitly mentions "trial scheduled" or "trial date"
+- `08_REFERENCE/` contains trial exhibits or witness lists
+- Witness preparation documents in `07_DRAFTS_AND_WORK_PRODUCT/`
+- GAMEPLAN mentions "trial preparation" or "jury instructions"
 
-### If Case is in Good Shape:
-- Research done
-- Drafts reviewed and strong
-- Next deadline not urgent
+### Present Stage-Appropriate Questions
 
-**Offer:**
-> "Your case looks well-organized. Let me know if you need help with anything, or I can check for:
-> - New developments in case law (shepardize existing citations)
-> - Strategic adjustments
-> - Upcoming deadline preparation"
+**Format**: Always present exactly 6 numbered options, with option 6 being "Something else (tell me what)"
+
+#### PRE-FILING Stage Questions
+
+When detected:
+```
+I see you're investigating a potential case. What would you like to work on?
+
+1. Organize evidence from inbox
+2. Research case viability (deep research)
+3. Calculate potential damages
+4. Check statute of limitations
+5. Identify potential claims
+6. Something else (tell me what)
+
+Choose 1-6:
+```
+
+**Action mapping:**
+- 1 → Run `/organize` command
+- 2 → Run `/deep-research-prep` or `/strategy`
+- 3 → Help calculate damages from evidence
+- 4 → Research statute of limitations for jurisdiction
+- 5 → `/strategy` focused on potential claims
+- 6 → Ask user to specify
+
+#### DISCOVERY Stage Questions
+
+When detected (check for urgent deadlines first):
+```
+You're in active discovery. What's your priority?
+
+1. Respond to pending discovery requests (deadline: [DATE if exists])
+2. Draft new interrogatories/document requests
+3. Organize opponent's document production
+4. Prepare for depositions
+5. Check discovery deadlines
+6. Something else (tell me what)
+
+Choose 1-6:
+```
+
+**Action mapping:**
+- 1 → List pending requests, offer to draft responses
+- 2 → `/draft` discovery requests
+- 3 → `/organize` discovery production folder
+- 4 → Create deposition outline from evidence
+- 5 → Extract deadlines from timeline and GAMEPLAN
+- 6 → Ask user to specify
+
+#### MOTION PRACTICE Stage Questions
+
+When detected:
+```
+I see recent motion activity. How can I help?
+
+1. Draft new motion (specify type)
+2. Respond to opponent's motion (which one?)
+3. Research motion standards
+4. Review draft before filing (fact-check pipeline)
+5. Prepare for oral argument
+6. Something else (tell me what)
+
+Choose 1-6:
+```
+
+**Action mapping:**
+- 1 → Ask which motion type, then `/draft`
+- 2 → List opponent's motions, offer to draft response
+- 3 → `/research` on motion standards for jurisdiction
+- 4 → Run `/review` with full pipeline (self-review, citations, opposing counsel, fact verify, final)
+- 5 → Create oral argument outline
+- 6 → Ask user to specify
+
+#### TRIAL PREP Stage Questions
+
+When detected:
+```
+Trial preparation mode. What do you need?
+
+1. Organize trial exhibits
+2. Prepare witness examination outlines
+3. Draft jury instructions
+4. Create trial brief
+5. Review pre-trial checklist
+6. Something else (tell me what)
+
+Choose 1-6:
+```
+
+**Action mapping:**
+- 1 → `/organize` exhibits, create exhibit list
+- 2 → Draft direct/cross examination outlines
+- 3 → `/draft` jury instructions
+- 4 → `/draft` trial brief
+- 5 → Check pre-trial order compliance
+- 6 → Ask user to specify
+
+#### GENERAL/UNCLEAR Stage (Fallback)
+
+When stage cannot be clearly determined:
+```
+I'm ready to help with your case. What would you like to work on?
+
+1. Organize documents from inbox
+2. Research legal issues
+3. Draft or review documents
+4. Check deadlines and next steps
+5. Get strategic recommendations
+6. Something else (tell me what)
+
+Choose 1-6:
+```
+
+**Action mapping:**
+- 1 → `/organize`
+- 2 → `/research` or `/deep-research-prep`
+- 3 → Ask if drafting or reviewing, then `/draft` or `/review`
+- 4 → Check GAMEPLAN and timeline for deadlines
+- 5 → `/strategy`
+- 6 → Ask user to specify
 
 ## 6. Default Offer (If Can't Determine Status)
 
