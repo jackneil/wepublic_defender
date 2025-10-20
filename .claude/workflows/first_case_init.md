@@ -175,7 +175,51 @@ Use the deep research findings to populate:
 Save to `GAMEPLAN.md` and tell user:
 > "I've generated your strategic GAMEPLAN.md based on the research. This will guide all future work on this case. Review it and let me know if you want to adjust the strategy."
 
-## 7. Mark Case as Initialized
+## 7. Initialize Tracking Files
+
+**MANDATORY**: Create the session and case tracking files from templates.
+
+### Create Session Notes
+
+Copy from template and customize:
+
+```bash
+# Read template
+Read: .claude/templates/session_notes_template.md
+
+# Create with current timestamp
+Write: .wepublic_defender/session_notes.md
+```
+
+Replace `{timestamp}` with current date/time, `{date}` with today's date.
+
+### Create Case Timeline
+
+Copy from template and customize:
+
+```bash
+# Read template
+Read: .claude/templates/case_timeline_template.md
+
+# Create with current timestamp and initial entry
+Write: .wepublic_defender/case_timeline.md
+```
+
+Replace `{timestamp}` with current date/time and add initial case initialization entry:
+
+```markdown
+### 2025-10-14 [current time] - 📋 CASE_INITIALIZED - Case Directory Created
+
+**Status**: Active
+**Category**: Case Management
+**Notes**: wepublic_defender case directory initialized and ready for work
+```
+
+**IMPORTANT**: These files are CRITICAL for tracking progress. Make sure they exist before proceeding.
+
+---
+
+## 8. Mark Case as Initialized
 
 Create `.wepublic_defender/case_initialized.json`:
 
@@ -188,13 +232,14 @@ Create `.wepublic_defender/case_initialized.json`:
   "gameplan_generated": true|false,
   "python_exe": "/path/to/python.exe",
   "conda_env": "wepublic_defender",
-  "repo_path": "/path/to/wepublic_defender"
+  "repo_path": "/path/to/wepublic_defender",
+  "tracking_files_created": true
 }
 ```
 
 This file prevents this workflow from running again on future sessions.
 
-## 8. Transition to Session Start Workflow
+## 9. Transition to Session Start Workflow
 
 Tell user:
 > "Case initialization complete. Future sessions will use the regular workflow. What would you like to work on?"

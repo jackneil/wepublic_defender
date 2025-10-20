@@ -42,6 +42,7 @@ setup(
         "aiofiles>=23.0.0",
         "typing-extensions>=4.0.0",
         "xai-sdk>=0.1.0",
+        "PyMuPDF>=1.23.0",
     ],
     entry_points={
         "console_scripts": [
@@ -55,6 +56,7 @@ setup(
             "wpd-file-log=wepublic_defender.cli.file_log:main",
             "wpd-deep-research-prompt=wepublic_defender.cli.deep_research_prompt:main",
             "wpd-convert-to-word=wepublic_defender.cli.convert_to_word:main",
+            "wpd-pdf-to-images=wepublic_defender.utils.pdf_to_images:main",
         ],
     },
     extras_require={

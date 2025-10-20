@@ -165,6 +165,7 @@ This format will be automatically converted to Word when ready for filing.
             "opposing_counsel": (OpposingCounselReview, False),
             "final_review": (DocumentReviewResult, False),
             "research": (LegalResearchResult, False),
+            "fact_verify": (DocumentReviewResult, False),  # Uses same structure as self_review
         }
         return mapping.get(agent_type, (None, False))
 
@@ -191,6 +192,47 @@ This format will be automatically converted to Word when ready for filing.
             if snippet:
                 return json.loads(snippet)
             raise
+
+    def _load_agent_prompt(self, agent_type: str) -> str:
+        """
+        Load enhanced agent prompt from file.
+
+        Args:
+            agent_type: Type of agent (e.g., 'self_review', 'strategy')
+
+        Returns:
+            Prompt text from file, or fallback to simple prompt if file not found
+        """
+        # Map citation_verify to the correct filename
+        file_agent_type = agent_type
+        if agent_type == "citation_verify":
+            file_agent_type = "citation_verify"  # Keep as is for the file
+
+        prompt_file = Path(__file__).parent / "prompts" / "agent_prompts" / f"{file_agent_type}.md"
+
+        # Fallback to simple prompts if file doesn't exist
+        simple_prompts = {
+            "strategy": "You are a senior litigator providing strategic case guidance.",
+            "drafter": "You are an expert legal drafter. Produce clear, well-cited text.",
+            "self_review": "You are a senior attorney reviewing a legal document for sufficiency.",
+            "citation_verify": "You verify citations and whether cases are still good law.",
+            "opposing_counsel": "You are opposing counsel attacking weaknesses and counter-arguing.",
+            "final_review": "You perform a final pre-filing compliance and quality review.",
+            "research": "You are a legal research specialist using web search and synthesizing findings.",
+            "fact_verify": "You verify all factual assertions against evidence documents to ensure accuracy.",
+        }
+
+        if prompt_file.exists():
+            try:
+                enhanced_prompt = prompt_file.read_text(encoding="utf-8")
+                self.logger.info(f"Loaded enhanced prompt for {agent_type} from {prompt_file}")
+                return enhanced_prompt
+            except Exception as e:
+                self.logger.warning(f"Failed to load enhanced prompt for {agent_type}: {e}")
+                return simple_prompts.get(agent_type, "You are a helpful legal assistant.")
+        else:
+            self.logger.debug(f"Enhanced prompt file not found for {agent_type} at {prompt_file}")
+            return simple_prompts.get(agent_type, "You are a helpful legal assistant.")
 
     def _generate_claude_prompt(self, agent_type: str, parsed: Any) -> Optional[str]:
         """
@@ -225,13 +267,13 @@ This format will be automatically converted to Word when ready for filing.
                 ready = getattr(data, 'ready_to_file', False)
 
                 if ready:
-                    return f"Review passed! Document is ready to file (0 critical, {len(major)} major, {len(minor)} minor issues). Summarize the {len(major)} major issues for the user and ask if they want to address them before filing or proceed as-is."
+                    return f"Review passed! Document is ready to file (0 critical, {len(major)} major, {len(minor)} minor issues). NO CHANGES NEEDED in this phase. If ANY previous phases made changes, you MUST re-run the entire pipeline from Phase 1. Otherwise, proceed to next phase."
                 elif crit:
-                    return f"Found {len(crit)} CRITICAL issues that must be fixed before filing: {'; '.join(crit[:2])}{'...' if len(crit) > 2 else ''}. Also {len(major)} major and {len(minor)} minor issues. Present the critical issues as a bulleted list and ask if I should research solutions or if the user wants to review the full output first."
+                    return f"Found {len(crit)} CRITICAL issues that must be fixed before filing: {'; '.join(crit[:2])}{'...' if len(crit) > 2 else ''}. Also {len(major)} major and {len(minor)} minor issues. Present the critical issues as a bulleted list and fix them. After fixing, you MUST re-run the ENTIRE pipeline from Phase 1 to ensure fixes didn't create new problems."
                 elif major:
-                    return f"Found {len(major)} major issues (no critical): {'; '.join(major[:2])}{'...' if len(major) > 2 else ''}. Also {len(minor)} minor issues. Document needs revision. Present the major issues as a bulleted list and ask user if they want me to draft fixes or if they prefer to revise manually."
+                    return f"Found {len(major)} major issues (no critical): {'; '.join(major[:2])}{'...' if len(major) > 2 else ''}. Also {len(minor)} minor issues. Document needs revision. Fix these issues, then you MUST re-run the ENTIRE pipeline from Phase 1 to validate no regressions were introduced."
                 else:
-                    return f"Only {len(minor)} minor issues found. Document is in good shape. List the minor improvements and ask if the user wants to address them or proceed with filing."
+                    return f"Only {len(minor)} minor issues found. Document is in good shape. If you fix these minor issues, you MUST re-run the entire pipeline. Otherwise, if no changes made, proceed to next phase."
 
             elif agent_type == "citation_verify":
                 # CitationVerificationResult (list)
@@ -250,15 +292,15 @@ This format will be automatically converted to Word when ready for filing.
                         )
                         for item in bad_law[:2]
                     ])
-                    return f"WARNING: {len(bad_law)} of {total} citations are NO LONGER GOOD LAW: {bad_law_summary}. List these citations with their issues and strongly recommend immediate replacement. Also note {len(unsupported)} citations don't support our position."
+                    return f"WARNING: {len(bad_law)} of {total} citations are NO LONGER GOOD LAW: {bad_law_summary}. Will need to replace {len(bad_law)} citations. After replacing these bad citations, you MUST re-run the ENTIRE pipeline from Phase 1 to ensure new citations work with all arguments."
                 elif unsupported:
                     unsupported_names = '; '.join([getattr(item, 'case_name', 'Unknown') for item in unsupported[:2]])
-                    return f"Found {len(unsupported)} citations that DON'T SUPPORT our position: {unsupported_names}. List these with explanations of why they don't support us and recommend replacement or removal. {total - len(unsupported)} citations verified as good."
+                    return f"Found {len(unsupported)} citations that DON'T SUPPORT our position: {unsupported_names}. Need to replace or remove {len(unsupported)} citations. After fixing, you MUST re-run the ENTIRE pipeline from Phase 1."
                 elif issues:
                     issues_names = '; '.join([getattr(item, 'case_name', 'Unknown') for item in issues[:2]])
-                    return f"{len(issues)} citations have potential issues (but still good law): {issues_names}. Summarize the issues and ask if user wants to address them. {total - len(issues)} citations verified clean."
+                    return f"{len(issues)} citations have potential issues (but still good law): {issues_names}. If you fix these issues, you MUST re-run the entire pipeline. Otherwise proceed to next phase."
                 else:
-                    return f"All {total} citations verified as good law and supporting our position. Briefly confirm this success and ask if user wants to proceed with next review step (opposing_counsel)."
+                    return f"All {total} citations verified as good law and supporting our position. CLEAN PASS - NO CHANGES NEEDED. If ANY previous phases made changes, you MUST re-run entire pipeline. Otherwise proceed to opposing_counsel."
 
             elif agent_type == "opposing_counsel":
                 # OpposingCounselReview
@@ -273,12 +315,33 @@ This format will be automatically converted to Word when ready for filing.
 
                 if critical_weaknesses:
                     critical_issues = '; '.join([getattr(w, 'issue', 'Unknown') for w in critical_weaknesses[:2]])
-                    return f"Opposing counsel found {len(critical_weaknesses)} CRITICAL weaknesses that could get the document dismissed: {critical_issues}. Overall assessment: {strength}. Present the critical weaknesses as a numbered list with their exploitation strategies and recommend immediate revision before filing."
+                    return f"Opposing counsel found {len(critical_weaknesses)} CRITICAL weaknesses that could get the document dismissed: {critical_issues}. Overall assessment: {strength}. Must fix {len(critical_weaknesses)} critical weaknesses. After strengthening these arguments, you MUST re-run the ENTIRE pipeline from Phase 1."
                 elif major_weaknesses:
                     major_issues = '; '.join([getattr(w, 'issue', 'Unknown') for w in major_weaknesses[:2]])
-                    return f"Opposing counsel found {len(major_weaknesses)} major weaknesses (no critical): {major_issues}. Overall assessment: {strength}. Present the major weaknesses and ask if user wants me to draft strengthening revisions or if they want to address them manually."
+                    return f"Opposing counsel found {len(major_weaknesses)} major weaknesses (no critical): {major_issues}. Overall assessment: {strength}. Should fix {len(major_weaknesses)} major weaknesses. If you strengthen these arguments, you MUST re-run the ENTIRE pipeline from Phase 1."
                 else:
-                    return f"Opposing counsel found only minor weaknesses. Overall assessment: {strength}. Briefly summarize the document's strengths and minor areas for improvement, then ask if user wants to proceed with final_review."
+                    return f"Opposing counsel found only minor weaknesses. Overall assessment: {strength}. CLEAN PASS - no critical or major weaknesses. If ANY previous phases made changes, you MUST re-run entire pipeline. Otherwise proceed to final_review."
+
+            elif agent_type == "fact_verify":
+                # DocumentReviewResult (reused for fact verification)
+                data = items[0] if items else None
+                if not data:
+                    return None
+
+                crit = getattr(data, 'critical_issues', [])
+                major = getattr(data, 'major_issues', [])
+                minor = getattr(data, 'minor_issues', [])
+
+                # For fact verification, critical = unsupported facts (Rule 11 risk)
+                # major = wrong dates/amounts, minor = small discrepancies
+                if crit:
+                    return f"FACT VERIFICATION FAILED: Found {len(crit)} UNSUPPORTED facts that create Rule 11 exposure: {'; '.join(crit[:2])}{'...' if len(crit) > 2 else ''}. Also {len(major)} wrong dates/amounts and {len(minor)} minor discrepancies. Must fix {len(crit) + len(major)} factual errors. After correcting, you MUST re-run the ENTIRE pipeline from Phase 1."
+                elif major:
+                    return f"Found {len(major)} major factual discrepancies (wrong dates/amounts/quotes): {'; '.join(major[:2])}{'...' if len(major) > 2 else ''}. Also {len(minor)} minor discrepancies. Should fix {len(major)} major discrepancies. After fixing, you MUST re-run the ENTIRE pipeline from Phase 1."
+                elif minor:
+                    return f"Fact verification found only {len(minor)} minor discrepancies. If you fix these minor issues, you MUST re-run the entire pipeline. Otherwise, CLEAN PASS for fact verification - proceed to next phase."
+                else:
+                    return f"ALL FACTS VERIFIED: Every assertion matches evidence exactly. CLEAN PASS - NO CORRECTIONS NEEDED. If ANY previous phases made changes, you MUST re-run entire pipeline. Otherwise, document facts are accurate."
 
             elif agent_type == "strategy":
                 # StrategyRecommendation
@@ -318,7 +381,7 @@ This format will be automatically converted to Word when ready for filing.
 
             elif agent_type == "drafter":
                 # Drafter returns free-form text, no structured data
-                return "Draft complete. Present a brief summary of the document structure (main sections/arguments), then ask user if they want me to run self_review to check for issues or if they prefer to review it manually first."
+                return "Draft complete. Present a brief summary of the document structure (main sections/arguments). Now you MUST run the complete review pipeline starting with self_review to validate this draft."
 
             else:
                 return None
@@ -382,9 +445,10 @@ This format will be automatically converted to Word when ready for filing.
 
         Args:
             agent_type: One of [strategy, drafter, self_review, citation_verify,
-                        opposing_counsel, final_review, organize, research]
+                        opposing_counsel, final_review, organize, research, fact_verify]
             document: Document content to review
             mode: Agent mode - guidance or external-llm (default: guidance)
+                  NOTE: organize and fact_verify ONLY support guidance mode (need file access)
             web_search: Override web search setting
             override_model: Run single specific model (bypasses multi-model)
             **kwargs: Additional context for prompt
@@ -415,11 +479,13 @@ This format will be automatically converted to Word when ready for filing.
             >>> # External LLM mode (costs money)
             >>> result = await defender.call_agent("drafter", doc, mode="external-llm")
         """
-        # Special case: organize agent ONLY operates in guidance mode
-        if agent_type == "organize":
+        # Special case: organize and fact_verify agents ONLY operate in guidance mode
+        # External LLMs cannot access file system to read evidence or organize files
+        if agent_type in ("organize", "fact_verify"):
             if mode != "guidance":
                 self.logger.warning(
-                    "organize agent only supports guidance mode; forcing mode=guidance"
+                    "%s agent only supports guidance mode (cannot access files); forcing mode=guidance",
+                    agent_type
                 )
             return self._load_guidance(agent_type, document, **kwargs)
 
@@ -517,17 +583,8 @@ This format will be automatically converted to Word when ready for filing.
         agent_config = self.review_settings.get("reviewAgentConfig", {}).get(agent_key)
         use_web_search = web_search if web_search is not None else agent_config.get("web_search", False)
 
-        # Build a minimal role/system prompt per agent
-        role_map = {
-            "strategy": "You are a senior litigator providing strategic case guidance.",
-            "drafter": "You are an expert legal drafter. Produce clear, well-cited text.",
-            "self_review": "You are a senior attorney reviewing a legal document for sufficiency.",
-            "citation_verify": "You verify citations and whether cases are still good law.",
-            "opposing_counsel": "You are opposing counsel attacking weaknesses and counter-arguing.",
-            "final_review": "You perform a final pre-filing compliance and quality review.",
-            "research": "You are a legal research specialist using web search and synthesizing findings.",
-        }
-        base_role = role_map.get(agent_type, "You are a helpful legal assistant.")
+        # Load enhanced prompt from file (or fallback to simple prompt)
+        base_role = self._load_agent_prompt(agent_type)
 
         # Prepare messages for OpenAI-compatible chat
         sys_content = f"{base_role}\n\n{self.markdown_format_instructions}".strip()
@@ -839,7 +896,7 @@ This format will be automatically converted to Word when ready for filing.
             raise FileNotFoundError(
                 f"Guidance file not found: {guidance_path}\n"
                 f"Available agents: strategy, drafter, self_review, citation_verify, "
-                f"opposing_counsel, final_review, organize, research"
+                f"opposing_counsel, final_review, organize, research, fact_verify"
             )
 
         # Load guidance template

@@ -12,6 +12,21 @@ So you got screwed by a corporation and can't afford a $400/hr lawyer. Here's wh
 
 This isn't just "multiple AIs reviewing your document." It's an **iterative refinement pipeline** where Claude Code orchestrates, participates, analyzes, fixes, and validates until your document is bulletproof.
 
+**THE MASTER LOOP:**
+```
+DO {
+  Run Phase 1: Document Organization
+  Run Phase 2: Self-Review (iterate until clean)
+  Run Phase 3: Citation Verification (iterate until valid)
+  Run Phase 4: Opposing Counsel (iterate until defensible)
+  Run Phase 5: Final Validation
+
+  changes_made = count_all_fixes()
+} WHILE (changes_made > 0)
+
+// ONLY exits when ENTIRE pipeline passes with ZERO changes
+```
+
 **Phase 1: Claude Reads EVERYTHING**
 - Reads all 47 documents in your case folder
 - Organizes them into proper legal structure
@@ -63,6 +78,45 @@ RUN ENTIRE PIPELINE AGAIN:
   - If any issues → iterate affected stages
   - Result: 10th draft quality minimum
 ```
+
+### 🔴 The Golden Rule: ALWAYS Re-Validate After ANY Changes
+
+**If the pipeline made ANY fixes, it MUST run again from the beginning. No exceptions.**
+
+```python
+# The ACTUAL pipeline logic:
+DO {
+    run_complete_pipeline()  # All 5 phases
+    fixes_made = track_all_changes()
+} WHILE (fixes_made > 0)
+
+# Only exits when ENTIRE pipeline runs with ZERO changes needed
+```
+
+**Why This Is Non-Negotiable:**
+
+Legal documents are **interconnected systems** where changing one thing affects everything:
+- Fix a jurisdiction issue → might affect standing arguments
+- Fix a citation → might weaken a legal theory
+- Strengthen an argument → might create inconsistency elsewhere
+- Add a counter-argument → might contradict earlier position
+
+**The Only Way to Be Sure: Full Re-Validation**
+
+```
+Pipeline Run #1: Found 19 issues → Fixed them → RESTART
+Pipeline Run #2: Found 5 issues → Fixed them → RESTART
+Pipeline Run #3: Found 1 issue → Fixed it → RESTART
+Pipeline Run #4: Found 0 issues → DONE ✅
+```
+
+**What This Prevents:**
+- **Regression bugs**: Fix didn't break something else
+- **Incomplete fixes**: Change didn't fully solve the problem
+- **Cascade effects**: Fix didn't create new issues downstream
+- **Hidden dependencies**: Change didn't affect related sections
+
+**This is why WePublicDefender is bulletproof** - it NEVER assumes a fix is good. It validates, re-validates, and validates again until achieving a perfect zero-defect pass through the entire pipeline.
 
 ### 🎯 What This System Actually Catches (Real Examples)
 
@@ -154,21 +208,38 @@ You: /review my_motion_to_dismiss.md
 ✅ Document defensible
 ➡️ Final validation...
 
-=== PHASE 5: FINAL PIPELINE VALIDATION ===
-Running ALL agents again for final verification...
-✅ Self-Review: PASS (all models)
-✅ Citations: VERIFIED (100% good law)
-✅ Opposing: DEFENSIBLE
-✅ Final: READY TO FILE
+=== PHASE 5: COMPLETE PIPELINE RE-RUN #1 ===
+⚠️ Changes were made - must validate entire pipeline...
+
+[Fast-forward through Phases 1-4]
+✅ Organization: No changes
+🔧 Self-Review: Fixed 1 minor formatting issue
+✅ Citations: All valid
+✅ Opposing: Defensible
+
+⚠️ Pipeline made changes - MUST RUN AGAIN
+
+=== COMPLETE PIPELINE RE-RUN #2 ===
+♻️ Restarting from Phase 1 due to changes...
+
+[Fast-forward through all phases]
+✅ Organization: No changes
+✅ Self-Review: No issues
+✅ Citations: All valid
+✅ Opposing: No vulnerabilities
+✅ Final: No changes needed
+
+🎉 CLEAN PASS - DOCUMENT READY TO FILE!
 
 📊 FINAL STATISTICS:
-- Total Iterations: 8
-- Issues Fixed: 19
-- API Calls: 24
-- Total Cost: $8.47
-- Time: 6 minutes
-- Equivalent: 10th draft after mock trial
-- Lawyer Cost Equivalent: $2,400 (6 hours @ $400/hr)
+- Pipeline Runs: 3 complete passes
+- Total Iterations: 11
+- Issues Fixed: 20
+- API Calls: 42
+- Total Cost: $12.83
+- Time: 9 minutes
+- Equivalent: 15th draft with zero defects
+- Lawyer Cost Equivalent: $3,600 (9 hours @ $400/hr)
 ```
 
 ### 🎪 The Features That Make Lawyers Nervous

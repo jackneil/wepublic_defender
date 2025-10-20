@@ -171,7 +171,30 @@ Run specific checks as needed. Claude orchestrates the workflow:
 
 **This review is BRUTAL** - that's the point. Better to find problems now than after filing.
 
-#### D. Final Review - Pre-Filing Compliance
+#### D. Fact Verification - Evidence Accuracy Check
+
+```bash
+<python_path> -m wepublic_defender.cli.run_agent --agent fact_verify --file 07_DRAFTS_AND_WORK_PRODUCT/drafts/MOTION_v1.md --mode guidance --verbose
+```
+
+**Checks:**
+- Every date against source documents
+- All damage amounts against receipts/invoices
+- Quotes accurate with context preserved
+- Events match evidence timeline
+- Claims supported by discovery
+- Rule 11 compliance verified
+
+**CRITICAL**: This phase checks EVERY factual assertion against actual evidence files in:
+- `04_EVIDENCE/` - Primary evidence
+- `03_DISCOVERY/` - Discovery responses
+- `05_CORRESPONDENCE/` - Communications
+
+**Results saved to:** `.wepublic_defender/reviews/fact_verify_[timestamp].json`
+
+**Why this matters:** A single wrong date or unsupported fact can trigger Rule 11 sanctions. This phase catches discrepancies between what we claim and what evidence shows.
+
+#### E. Final Review - Pre-Filing Compliance
 
 ```bash
 <python_path> -m wepublic_defender.cli.run_agent --agent final_review --file 07_DRAFTS_AND_WORK_PRODUCT/drafts/MOTION_v1.md --mode guidance --verbose
@@ -209,6 +232,7 @@ Read the JSON files in `.wepublic_defender/reviews/`:
 - `self_review_[timestamp].json`
 - `citation_verify_[timestamp].json`
 - `opposing_counsel_[timestamp].json`
+- `fact_verify_[timestamp].json`
 - `final_review_[timestamp].json`
 
 List every concern raised by the LLMs.
@@ -370,29 +394,80 @@ LLM concerns analyzed:
 Draft is ready for final review.
 ```
 
-## 7. Iteration Phase
+## 7. Iteration Phase - Claude Orchestration
 
-### After Making Changes:
+### Follow Agent Instructions for Pipeline Re-Validation
 
-Re-run affected checks:
+**CRITICAL**: After EVERY agent run, check the `claude_prompt` field for orchestration instructions.
 
-**If you changed legal arguments:**
-- Re-run self_review
-- Re-run opposing_counsel (see if it still finds problems)
+#### The Golden Rule: If ANY Changes Made → Re-Run ENTIRE Pipeline
 
-**If you changed citations:**
-- Re-run citation_verify
+```python
+# Pseudo-code for your orchestration logic:
+total_changes = 0
 
-**If you fixed formatting:**
-- Re-run final_review
+# Track changes from each phase
+if "must fix" in agent_prompt or "will need to replace" in agent_prompt:
+    total_changes += extract_number_from_prompt()
 
-### Iterate Until Ready:
+# After ALL phases complete:
+if total_changes > 0:
+    print(f"⚠️ Pipeline made {total_changes} changes")
+    print("MUST RESTART ENTIRE PIPELINE FROM PHASE 1")
+    # GO BACK TO PHASE 1: Document Organization
+else:
+    print("✅ CLEAN PASS - No changes made")
+    print("Document validated and ready for finalization")
+```
 
-**Quality gates before filing:**
-- Critical issues: 0
-- Major issues: ≤ 2 (and must be documented/justified)
-- All citations verified as good law
-- All procedural requirements met
+#### What Agent Prompts Tell You:
+
+**Prompts indicating changes made:**
+- "Must fix X critical weaknesses. After fixing, you MUST re-run the ENTIRE pipeline"
+- "Will need to replace X citations. After replacing, you MUST re-run the ENTIRE pipeline"
+- "Found X issues. After fixing, you MUST re-run the ENTIRE pipeline"
+
+**Prompts indicating clean pass:**
+- "CLEAN PASS - NO CHANGES NEEDED"
+- "All citations verified as good law"
+- "No critical or major weaknesses"
+→ BUT still check: "If ANY previous phases made changes, you MUST re-run entire pipeline"
+
+#### Example Pipeline Orchestration:
+
+```
+=== PIPELINE RUN #1 ===
+Phase 1: Self-Review → "Must fix 3 critical issues" → Changes: 3
+Phase 2: Citations → "Replace 2 bad citations" → Changes: 2
+Phase 3: Opposing → "Fix 1 critical weakness" → Changes: 1
+Total Changes: 6 → RESTART FROM PHASE 1
+
+=== PIPELINE RUN #2 ===
+Phase 1: Self-Review → "Fix 1 major issue" → Changes: 1
+Phase 2: Citations → "CLEAN PASS" → Changes: 0
+Phase 3: Opposing → "CLEAN PASS" → Changes: 0
+Total Changes: 1 → RESTART FROM PHASE 1
+
+=== PIPELINE RUN #3 ===
+Phase 1: Self-Review → "CLEAN PASS" → Changes: 0
+Phase 2: Citations → "CLEAN PASS" → Changes: 0
+Phase 3: Opposing → "CLEAN PASS" → Changes: 0
+Total Changes: 0 → PROCEED TO FINALIZATION ✅
+```
+
+### Why Full Re-Validation Matters:
+
+- **Cascade Effects**: Fixing jurisdiction might break standing arguments
+- **Citation Dependencies**: New citations might not support revised arguments
+- **Consistency**: Strengthening one argument might contradict another
+- **Hidden Regressions**: Fixes often create new problems elsewhere
+
+### Quality Gates (Only After Clean Pass):
+
+**Document is ready for finalization only when:**
+- Complete pipeline run with ZERO changes
+- All agents report "CLEAN PASS"
+- No fixes were applied in any phase
 - Document follows LEGAL_WORK_PROTOCOL.md standards
 
 ## 8. Finalization Phase

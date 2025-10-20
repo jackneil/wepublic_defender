@@ -455,9 +455,43 @@ class MarkdownToWordConverter:
             p.paragraph_format.left_indent = Inches(0.25)
             p.paragraph_format.space_before = Pt(0)
             p.paragraph_format.space_after = Pt(0)
-            run = p.add_run(text)
-            run.font.name = self.config.font_name
-            run.font.size = Pt(self.config.font_size)
+
+            # Process bold and italic markdown in bullet text
+            # First, handle bold+italic (***text***)
+            text = re.sub(r'\*\*\*(.*?)\*\*\*', lambda m: f'{{BOLDITALIC}}{m.group(1)}{{/BOLDITALIC}}', text)
+            # Then handle bold (**text**)
+            text = re.sub(r'\*\*(.*?)\*\*', lambda m: f'{{BOLD}}{m.group(1)}{{/BOLD}}', text)
+            # Then handle italic (*text*)
+            text = re.sub(r'\*(.*?)\*', lambda m: f'{{ITALIC}}{m.group(1)}{{/ITALIC}}', text)
+
+            # Split by formatting markers and add runs
+            parts = re.split(r'(\{BOLD\}|\{/BOLD\}|\{ITALIC\}|\{/ITALIC\}|\{BOLDITALIC\}|\{/BOLDITALIC\})', text)
+
+            bold = False
+            italic = False
+
+            for part in parts:
+                if part == '{BOLD}':
+                    bold = True
+                elif part == '{/BOLD}':
+                    bold = False
+                elif part == '{ITALIC}':
+                    italic = True
+                elif part == '{/ITALIC}':
+                    italic = False
+                elif part == '{BOLDITALIC}':
+                    bold = True
+                    italic = True
+                elif part == '{/BOLDITALIC}':
+                    bold = False
+                    italic = False
+                elif part:
+                    run = p.add_run(part)
+                    run.bold = bold
+                    run.italic = italic
+                    run.font.name = self.config.font_name
+                    run.font.size = Pt(self.config.font_size)
+
             return in_verification, in_signature
 
         # Skip blank lines - double-spacing handles paragraph separation

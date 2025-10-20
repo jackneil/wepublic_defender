@@ -39,6 +39,10 @@
       "effort": "high",
       "web_search": true
     },
+    "fact_verify_agent": {
+      "_comment": "fact_verify agent ONLY operates in guidance mode - external LLMs cannot access file system to check evidence",
+      "guidance_only": true
+    },
     "organize_agent": {
       "_comment": "organize agent ONLY operates in guidance mode - NEVER uses external APIs",
       "guidance_only": true
