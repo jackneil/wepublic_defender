@@ -6,6 +6,29 @@ This file provides core configuration and conditional logic to load the appropri
 
 ---
 
+## 🚀 AUTOMATIC SESSION START (CRITICAL - READ FIRST)
+
+**ON EVERY NEW SESSION (before responding to user's first message):**
+
+1. **SessionStart Hook Auto-Triggers** (if hooks enabled)
+   - `.claude/hooks/SessionStart` fires automatically when Claude Code opens
+   - Hook outputs instructions to follow `session_start_checklist.md`
+   - This happens WITHOUT user action
+
+2. **If Hook Didn't Fire** (fallback behavior)
+   - Immediately check `.wepublic_defender/case_initialized.json` exists
+   - If exists → Follow `.claude/workflows/session_start_checklist.md` BEFORE responding
+   - Load context, detect stage, present 1-6 multiple choice questions
+   - DO NOT wait for user to ask - proactively guide them
+
+3. **Manual Override Available**
+   - User can type `/start` anytime to re-run session checklist
+   - Useful after long sessions or when context stale
+
+**Why This Matters**: Users shouldn't have to figure out what to do. Claude detects case stage (pre-filing, discovery, motion practice, trial prep) and presents relevant numbered options automatically.
+
+---
+
 ## ⚙️ Workflow Routing (READ FIRST EVERY SESSION)
 
 **Follow this conditional logic to determine which workflow to load:**
@@ -546,8 +569,7 @@ Stick to: A-Z, 0-9, and basic symbols: - * [ ] ! ? . , : ; " ' ( ) / \ | _
    ```json
    {
      "python_exe": "C:/Users/you/.conda/envs/wepublic_defender/python.exe",
-     "conda_env": "wepublic_defender",
-     "repo_path": "C:/path/to/wepublic_defender"
+     "conda_env": "wepublic_defender"
    }
    ```
 

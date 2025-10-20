@@ -4,23 +4,29 @@
 
 This checklist helps you quickly understand the current case status and offer relevant next actions.
 
-## ⚠️ CRITICAL: Windows File Editing (READ FIRST)
+---
 
-**If on Windows (`<env>` shows `win32`)**, you MUST use backslashes `\` in Edit/MultiEdit file paths:
+## CRITICAL: File Editing on Windows
 
-**❌ WRONG - Will cause errors:**
+### ⚠️ MANDATORY: Always Use Backslashes on Windows for File Paths
+
+**When using Edit or MultiEdit tools on Windows, you MUST use backslashes (`\`) in file paths, NOT forward slashes (`/`).**
+
+#### ❌ WRONG - Will cause errors:
 ```
-Edit(file_path: "C:/github/file.py", ...)
+Edit(file_path: "D:/repos/project/file.tsx", ...)
+MultiEdit(file_path: "D:/repos/project/file.tsx", ...)
 ```
 
-**✅ CORRECT - Always works:**
+#### ✅ CORRECT - Always works:
 ```
-Edit(file_path: "C:\\github\\file.py", ...)
+Edit(file_path: "D:\\repos\\project\\file.tsx", ...)
+MultiEdit(file_path: "D:\\repos\\project\\file.tsx", ...)
 ```
 
-**Bash commands still use forward slashes `/`** - this is ONLY for Edit/MultiEdit tool paths.
+**This is a known bug in Claude Code** - Edit/MultiEdit require backslashes on Windows even though Bash commands use forward slashes.
 
-**This is a known bug in Claude Code** - Edit tool requires backslashes on Windows even though everything else uses forward slashes.
+---
 
 ## 1. Quick Context Load
 
