@@ -5,6 +5,7 @@ Run this after cloning we_public_defender repo into a case folder.
 """
 
 import os
+import platform
 from pathlib import Path
 
 # Standard directory structure
@@ -165,6 +166,19 @@ def create_symlinks():
         shutil.copy2(commands_source, commands_target)
         print("  [UPDATED] COMMANDS_REFERENCE.md")
 
+    # Copy SESSION_START_MANDATORY.md to .claude/ (always overwrite)
+    session_start_source = source_base / ".claude" / "SESSION_START_MANDATORY.md"
+    session_start_target = base_path / ".claude" / "SESSION_START_MANDATORY.md"
+
+    if session_start_source.exists():
+        import shutil
+        # Ensure .claude directory exists
+        session_start_target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(session_start_source, session_start_target)
+        print("  [UPDATED] .claude/SESSION_START_MANDATORY.md")
+    else:
+        print(f"  [WARNING] Source file not found: {session_start_source}")
+
     # Copy .env example to root if no .env exists
     env_example = base_path / "wepublic_defender" / ".env.example"
     env_target = base_path / ".env"
@@ -279,6 +293,91 @@ def create_symlinks():
                     print(f"  [COPIED] .claude/templates/{rel}")
     except Exception as e:
         print(f"  [WARN] Failed to copy .claude/templates: {e}")
+
+    # Copy/merge .claude/hooks (session automation - SessionStart, etc.)
+    # OS-aware: Copy only the appropriate hook files for the current platform
+    hooks_src = repo_root / ".claude" / "hooks"
+    hooks_dst = base_path / ".claude" / "hooks"
+    try:
+        if hooks_src.exists():
+            hooks_dst.mkdir(parents=True, exist_ok=True)
+
+            # Determine OS and corresponding hook file extension
+            current_os = platform.system()
+            if current_os == 'Windows':
+                hook_extension = '.bat'
+            else:  # Linux, Darwin (Mac), or other Unix-like
+                hook_extension = '.sh'
+
+            # List of hook names to copy (canonical names without extension)
+            # These hooks exist for all platforms
+            hook_names = ['SessionStart', 'PreCompact']
+
+            # Windows-only hooks (remind about backslashes for Edit/MultiEdit)
+            if current_os == 'Windows':
+                hook_names.append('UserPromptSubmit')
+
+            import shutil
+            for hook_name in hook_names:
+                # Source: OS-specific hook file (e.g., SessionStart.bat or SessionStart.sh)
+                src_file = hooks_src / f"{hook_name}{hook_extension}"
+                # Destination: Canonical name without extension (e.g., SessionStart)
+                dst_file = hooks_dst / hook_name
+
+                if src_file.exists():
+                    shutil.copy2(src_file, dst_file)
+                    # Make executable on Unix/Mac (hooks need execute permission)
+                    if current_os != 'Windows':
+                        os.chmod(dst_file, 0o755)
+                    print(f"  [COPIED] .claude/hooks/{hook_name} (from {hook_name}{hook_extension})")
+                else:
+                    print(f"  [WARN] Hook not found: {src_file}")
+    except Exception as e:
+        print(f"  [WARN] Failed to copy .claude/hooks: {e}")
+
+    # Copy .claude/settings.local.json to enable hooks and permissions
+    # Use template-based approach with platform-specific overrides
+    settings_template_src = repo_root / ".claude" / "templates" / "settings.local.json"
+    settings_local_dst = base_path / ".claude" / "settings.local.json"
+
+    if settings_template_src.exists():
+        import shutil
+        import json
+
+        # Create .claude directory if needed
+        settings_local_dst.parent.mkdir(parents=True, exist_ok=True)
+
+        # Copy base template
+        shutil.copy2(settings_template_src, settings_local_dst)
+
+        # If on Windows, merge Windows-specific overrides
+        current_os = platform.system()
+        if current_os == 'Windows':
+            windows_overrides_src = repo_root / ".claude" / "templates" / "settings.local.windows_overrides.json"
+            if windows_overrides_src.exists():
+                # Load base settings
+                with open(settings_local_dst, 'r', encoding='utf-8') as f:
+                    base_settings = json.load(f)
+
+                # Load Windows overrides
+                with open(windows_overrides_src, 'r', encoding='utf-8') as f:
+                    overrides = json.load(f)
+
+                # Merge hooks (add Windows-specific hooks to base)
+                if 'hooks' in overrides:
+                    base_settings['hooks'].update(overrides['hooks'])
+
+                # Write merged settings back
+                with open(settings_local_dst, 'w', encoding='utf-8') as f:
+                    json.dump(base_settings, f, indent=2)
+
+                print("  [UPDATED] .claude/settings.local.json (with Windows-specific overrides)")
+            else:
+                print("  [UPDATED] .claude/settings.local.json (base template, Windows overrides not found)")
+        else:
+            print("  [UPDATED] .claude/settings.local.json (base template for Unix/Mac)")
+    else:
+        print(f"  [WARNING] Source template not found: {settings_template_src}")
 
     # Create .database for state tracking (file management logs, etc.)
     db_dir = base_path / ".database"

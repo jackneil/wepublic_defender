@@ -1,0 +1,38 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(dir:*)",
+      "Read",
+      "WebSearch",
+      "WebFetch",
+      "Write",
+      "Bash(cat:*)"
+    ],
+    "deny": [],
+    "ask": []
+  },
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo '=== SESSION START REMINDER ===\n\nBEFORE responding to user:\n1. Read .wepublic_defender/session_notes.md\n2. Read .wepublic_defender/case_timeline.md\n3. Read GAMEPLAN.md\n4. Check 00_NEW_DOCUMENTS_INBOX/ for new files\n5. Identify current case stage and offer relevant next actions\n\nSee .claude/workflows/session_start_checklist.md for full checklist.\n\n=== END SESSION START REMINDER ==='"
+          }
+        ]
+      }
+    ],
+    "PreCompact": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo '=== PRE-COMPACT CHECKLIST ===\n\nSTOP! Before compacting:\n1. Update .wepublic_defender/session_notes.md with ALL work completed\n2. Update .wepublic_defender/case_timeline.md with major events\n3. Move completed drafts from 07_DRAFTS_AND_WORK_PRODUCT/ to proper folders\n4. Summarize key findings/decisions for user\n\nAfter compact, follow .claude/workflows/post_compact_recovery.md\n\n=== END PRE-COMPACT CHECKLIST ===' >&2 && exit 2"
+          }
+        ]
+      }
+    ]
+  }
+}

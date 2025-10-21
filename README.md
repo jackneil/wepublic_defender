@@ -520,9 +520,51 @@ Wait for both to finish before processing results.
 
 **No more timeout workarounds needed**: Claude Code 2.0.22+ automatically backgrounds long-running commands instead of killing them at 2 minutes. The /bashes command lets you monitor progress.
 
+### Claude Remembers Your Case (No More Repeating Yourself)
+
+**The best feature you'll never notice: Claude automatically knows what you were working on.**
+
+When you open Claude Code in your case folder, Claude automatically:
+- Reads what you worked on last session
+- Checks for upcoming deadlines
+- Looks for new files in your inbox
+- Figures out what stage your case is in (pre-filing, discovery, trial prep, etc.)
+- Offers you relevant next actions
+
+**What you'll see:**
+
+Instead of staring at a blank terminal wondering what to do, Claude greets you with clickable options:
+
+```
+I see you're in active discovery. What's your priority?
+
+[ ] Respond to pending discovery requests (deadline: Oct 25 - in 5 days!)
+[ ] Draft new interrogatories/document requests
+[ ] Organize opponent's document production
+[ ] Prepare for depositions
+[ ] Other
+
+Click an option to get started.
+```
+
+**No more:**
+- "Where did we leave off?"
+- "What was I working on?"
+- "What files do I have?"
+- Typing "1" or "2" like it's a phone menu from 1997
+
+**Just:**
+- Click what you want to do
+- Claude does it
+
+**Works on Windows, Mac, and Linux** - The system detects your operating system and sets everything up automatically during Step 1.
+
+**Manual override:** Type `/start` anytime to refresh context and see options again.
+
 ## Table of Contents
 
 - [How Claude Code Works - Choose Your Mode](#how-claude-code-works---choose-your-mode) - Understanding auto-accept, manual, and plan modes for legal work
+- [Claude Remembers Your Case](#claude-remembers-your-case-no-more-repeating-yourself) - Automatic context loading and smart next actions
 - [Step 0 - Get Your Shit Together](#step-0---get-your-shit-together-one-time-setup) - One-time setup: Claude CLI, terminal basics, API keys
 - [Step 1 - Central Setup](#step-1---central-setup-copy-paste-this-into-claude) - Copy-paste this into Claude to set everything up automatically
 - [Available Commands](#available-commands-what-you-can-tell-claude-to-do) - Slash commands and plain English instructions you can use

@@ -122,127 +122,144 @@ Check these indicators to determine case stage (check in order, first match wins
 
 ### Present Stage-Appropriate Questions
 
-**Format**: Always present exactly 6 numbered options, with option 6 being "Something else (tell me what)"
+**CRITICAL: Use AskUserQuestion tool, NOT text-based numbered lists!**
+
+**Format Requirements**:
+- **ALWAYS use AskUserQuestion tool** to present options (provides better UX)
+- Limit to 4 options max (tool constraint)
+- "Other" option automatically added by tool (don't include it yourself)
+- Set multiSelect: false (user picks one option)
+- Include clear descriptions for each option
 
 #### PRE-FILING Stage Questions
 
-When detected:
+When detected, use AskUserQuestion:
+
 ```
-I see you're investigating a potential case. What would you like to work on?
-
-1. Organize evidence from inbox
-2. Research case viability (deep research)
-3. Calculate potential damages
-4. Check statute of limitations
-5. Identify potential claims
-6. Something else (tell me what)
-
-Choose 1-6:
+AskUserQuestion(
+  questions: [{
+    question: "I see you're investigating a potential case. What would you like to work on?",
+    header: "Next Action",
+    multiSelect: false,
+    options: [
+      {label: "Organize evidence from inbox", description: "Sort and categorize evidence files into proper directories"},
+      {label: "Research case viability (deep research)", description: "Generate comprehensive research prompt for Claude.ai Deep Research mode"},
+      {label: "Calculate potential damages", description: "Analyze evidence to calculate damages and settlement value"},
+      {label: "Check statute of limitations", description: "Research filing deadlines for potential claims"}
+    ]
+  }]
+)
 ```
 
 **Action mapping:**
-- 1 → Run `/organize` command
-- 2 → Run `/deep-research-prep` or `/strategy`
-- 3 → Help calculate damages from evidence
-- 4 → Research statute of limitations for jurisdiction
-- 5 → `/strategy` focused on potential claims
-- 6 → Ask user to specify
+- Organize evidence → Run `/organize` command
+- Research case viability → Run `/deep-research-prep` or `/strategy`
+- Calculate potential damages → Help calculate damages from evidence
+- Check statute of limitations → Research statute of limitations for jurisdiction
 
 #### DISCOVERY Stage Questions
 
-When detected (check for urgent deadlines first):
+When detected (check for urgent deadlines first), use AskUserQuestion:
+
 ```
-You're in active discovery. What's your priority?
-
-1. Respond to pending discovery requests (deadline: [DATE if exists])
-2. Draft new interrogatories/document requests
-3. Organize opponent's document production
-4. Prepare for depositions
-5. Check discovery deadlines
-6. Something else (tell me what)
-
-Choose 1-6:
+AskUserQuestion(
+  questions: [{
+    question: "You're in active discovery. What's your priority?",
+    header: "Discovery",
+    multiSelect: false,
+    options: [
+      {label: "Respond to pending discovery requests", description: "Draft responses to interrogatories or document requests (deadline: [DATE if exists])"},
+      {label: "Draft new interrogatories/document requests", description: "Create discovery requests to send to opposing counsel"},
+      {label: "Organize opponent's document production", description: "Sort and categorize documents received from opposing counsel"},
+      {label: "Prepare for depositions", description: "Create deposition outline and examination questions"}
+    ]
+  }]
+)
 ```
 
 **Action mapping:**
-- 1 → List pending requests, offer to draft responses
-- 2 → `/draft` discovery requests
-- 3 → `/organize` discovery production folder
-- 4 → Create deposition outline from evidence
-- 5 → Extract deadlines from timeline and GAMEPLAN
-- 6 → Ask user to specify
+- Respond to pending requests → List pending requests, offer to draft responses
+- Draft new interrogatories → `/draft` discovery requests
+- Organize opponent's production → `/organize` discovery production folder
+- Prepare for depositions → Create deposition outline from evidence
 
 #### MOTION PRACTICE Stage Questions
 
-When detected:
+When detected, use AskUserQuestion:
+
 ```
-I see recent motion activity. How can I help?
-
-1. Draft new motion (specify type)
-2. Respond to opponent's motion (which one?)
-3. Research motion standards
-4. Review draft before filing (fact-check pipeline)
-5. Prepare for oral argument
-6. Something else (tell me what)
-
-Choose 1-6:
+AskUserQuestion(
+  questions: [{
+    question: "I see recent motion activity. How can I help?",
+    header: "Motions",
+    multiSelect: false,
+    options: [
+      {label: "Draft new motion", description: "Create a new motion (will ask which type)"},
+      {label: "Respond to opponent's motion", description: "Draft opposition or response to opposing counsel's motion"},
+      {label: "Research motion standards", description: "Research legal standards and requirements for motions"},
+      {label: "Review draft before filing", description: "Run fact-check pipeline (self-review, citations, opposing counsel, fact verify)"}
+    ]
+  }]
+)
 ```
 
 **Action mapping:**
-- 1 → Ask which motion type, then `/draft`
-- 2 → List opponent's motions, offer to draft response
-- 3 → `/research` on motion standards for jurisdiction
-- 4 → Run `/review` with full pipeline (self-review, citations, opposing counsel, fact verify, final)
-- 5 → Create oral argument outline
-- 6 → Ask user to specify
+- Draft new motion → Ask which motion type, then `/draft`
+- Respond to opponent's motion → List opponent's motions, offer to draft response
+- Research motion standards → `/research` on motion standards for jurisdiction
+- Review draft before filing → Run `/review` with full pipeline (self-review, citations, opposing counsel, fact verify, final)
 
 #### TRIAL PREP Stage Questions
 
-When detected:
+When detected, use AskUserQuestion:
+
 ```
-Trial preparation mode. What do you need?
-
-1. Organize trial exhibits
-2. Prepare witness examination outlines
-3. Draft jury instructions
-4. Create trial brief
-5. Review pre-trial checklist
-6. Something else (tell me what)
-
-Choose 1-6:
+AskUserQuestion(
+  questions: [{
+    question: "Trial preparation mode. What do you need?",
+    header: "Trial Prep",
+    multiSelect: false,
+    options: [
+      {label: "Organize trial exhibits", description: "Sort exhibits and create exhibit list for trial"},
+      {label: "Prepare witness examination outlines", description: "Draft direct and cross-examination questions"},
+      {label: "Draft jury instructions", description: "Create proposed jury instructions for trial"},
+      {label: "Create trial brief", description: "Draft comprehensive trial brief"}
+    ]
+  }]
+)
 ```
 
 **Action mapping:**
-- 1 → `/organize` exhibits, create exhibit list
-- 2 → Draft direct/cross examination outlines
-- 3 → `/draft` jury instructions
-- 4 → `/draft` trial brief
-- 5 → Check pre-trial order compliance
-- 6 → Ask user to specify
+- Organize trial exhibits → `/organize` exhibits, create exhibit list
+- Prepare witness examination outlines → Draft direct/cross examination outlines
+- Draft jury instructions → `/draft` jury instructions
+- Create trial brief → `/draft` trial brief
 
 #### GENERAL/UNCLEAR Stage (Fallback)
 
-When stage cannot be clearly determined:
+When stage cannot be clearly determined, use AskUserQuestion:
+
 ```
-I'm ready to help with your case. What would you like to work on?
-
-1. Organize documents from inbox
-2. Research legal issues
-3. Draft or review documents
-4. Check deadlines and next steps
-5. Get strategic recommendations
-6. Something else (tell me what)
-
-Choose 1-6:
+AskUserQuestion(
+  questions: [{
+    question: "I'm ready to help with your case. What would you like to work on?",
+    header: "Next Action",
+    multiSelect: false,
+    options: [
+      {label: "Organize documents from inbox", description: "Sort and categorize documents into proper directories"},
+      {label: "Research legal issues", description: "Research case law, statutes, or legal standards"},
+      {label: "Draft or review documents", description: "Create new documents or review existing drafts"},
+      {label: "Get strategic recommendations", description: "Analyze case status and suggest next steps"}
+    ]
+  }]
+)
 ```
 
 **Action mapping:**
-- 1 → `/organize`
-- 2 → `/research` or `/deep-research-prep`
-- 3 → Ask if drafting or reviewing, then `/draft` or `/review`
-- 4 → Check GAMEPLAN and timeline for deadlines
-- 5 → `/strategy`
-- 6 → Ask user to specify
+- Organize documents → `/organize`
+- Research legal issues → `/research` or `/deep-research-prep`
+- Draft or review documents → Ask if drafting or reviewing, then `/draft` or `/review`
+- Get strategic recommendations → `/strategy`
 
 ## 6. Default Offer (If Can't Determine Status)
 

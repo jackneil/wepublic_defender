@@ -1,3 +1,48 @@
+# !!! MANDATORY SESSION START - FIRST ACTION EVERY SESSION !!!
+
+═══════════════════════════════════════════════════════════════════════════════
+                            STOP AND READ THIS FIRST
+═══════════════════════════════════════════════════════════════════════════════
+
+## CRITICAL: IS THIS YOUR FIRST RESPONSE IN THIS SESSION?
+
+**BEFORE responding to the user, answer this question:**
+
+→ **Have you loaded context from session_notes.md, case_timeline.md, and GAMEPLAN.md yet?**
+
+   **NO?** → **STOP RIGHT NOW AND DO THIS:**
+
+   1. Read `.claude/SESSION_START_MANDATORY.md` (10 seconds)
+   2. Follow `.claude/workflows/session_start_checklist.md` (30 seconds)
+   3. THEN respond to user with stage-appropriate options
+
+   **THIS WORKS IN PLAN MODE** - Reading files is non-destructive and allowed!
+
+   **YES?** → You already ran the checklist, proceed with user's request
+
+═══════════════════════════════════════════════════════════════════════════════
+
+**Why this is MANDATORY:**
+
+- Users shouldn't have to explain context every session
+- You need to know what was worked on last time
+- You need to see upcoming deadlines
+- You should proactively offer relevant next actions
+- This makes the user's life easier
+
+**How to verify you did this:**
+
+After running session start checklist, you should know:
+- [ ] What was worked on last session (from session_notes.md)
+- [ ] Recent case events (from case_timeline.md)
+- [ ] Upcoming deadlines (from GAMEPLAN.md)
+- [ ] What files are in inbox (from 00_NEW_DOCUMENTS_INBOX/)
+- [ ] Current case stage (PRE-FILING, DISCOVERY, MOTION PRACTICE, TRIAL PREP, GENERAL)
+
+If you don't know these things and this is your first message, GO TO `.claude/SESSION_START_MANDATORY.md` NOW.
+
+═══════════════════════════════════════════════════════════════════════════════
+
 # Legal Case Management - Claude Code Orchestrator
 
 **You are assisting with a legal case using the wepublic_defender system.**
@@ -6,26 +51,24 @@ This file provides core configuration and conditional logic to load the appropri
 
 ---
 
-## 🚀 AUTOMATIC SESSION START (CRITICAL - READ FIRST)
+## Session Start Mechanisms (Multiple Redundant Layers)
 
-**ON EVERY NEW SESSION (before responding to user's first message):**
+### Layer 1: SessionStart Hook (Automatic)
+- `.claude/hooks/SessionStart` fires when Claude Code opens (if hooks enabled)
+- Outputs instructions to follow `session_start_checklist.md`
+- Most reliable method when hooks are working
 
-1. **SessionStart Hook Auto-Triggers** (if hooks enabled)
-   - `.claude/hooks/SessionStart` fires automatically when Claude Code opens
-   - Hook outputs instructions to follow `session_start_checklist.md`
-   - This happens WITHOUT user action
+### Layer 2: SESSION_START_MANDATORY.md (Failsafe)
+- If hook didn't fire, the giant warning above should catch you
+- Points to `.claude/SESSION_START_MANDATORY.md` for quick reference
+- Works EVEN IN PLAN MODE (reading is allowed)
 
-2. **If Hook Didn't Fire** (fallback behavior)
-   - Immediately check `.wepublic_defender/case_initialized.json` exists
-   - If exists → Follow `.claude/workflows/session_start_checklist.md` BEFORE responding
-   - Load context, detect stage, present 1-6 multiple choice questions
-   - DO NOT wait for user to ask - proactively guide them
+### Layer 3: Manual Override (/start command)
+- User can type `/start` anytime to re-run session checklist
+- Useful after long sessions or when context is stale
+- Backup if automation fails
 
-3. **Manual Override Available**
-   - User can type `/start` anytime to re-run session checklist
-   - Useful after long sessions or when context stale
-
-**Why This Matters**: Users shouldn't have to figure out what to do. Claude detects case stage (pre-filing, discovery, motion practice, trial prep) and presents relevant numbered options automatically.
+**The goal: Make it impossible for you to skip session start and make users repeat themselves.**
 
 ---
 
@@ -871,5 +914,19 @@ This orchestrator file is **lightweight and focused on routing**. Detailed workf
 - When in doubt, ask the user
 
 ---
+
+═══════════════════════════════════════════════════════════════════════════════
+                      FINAL SAFETY CHECK - DID YOU SKIP SESSION START?
+═══════════════════════════════════════════════════════════════════════════════
+
+**If you're reading this and it's your FIRST message in a new session:**
+
+→ **Did you load context from session_notes.md, case_timeline.md, and GAMEPLAN.md?**
+
+   **NO?** → You skipped session start! GO BACK TO TOP OF THIS FILE NOW!
+
+   **YES?** → Great, proceed with user's request
+
+═══════════════════════════════════════════════════════════════════════════════
 
 **Now execute the workflow routing logic at the top of this file to determine your next action.**
