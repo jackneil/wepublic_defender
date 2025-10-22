@@ -1,0 +1,15 @@
+{
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo ## CRITICAL: File Editing on Windows & echo. & echo ### WARNING: Always Use Backslashes on Windows for File Paths & echo. & echo **When using Edit or MultiEdit tools on Windows, you MUST use backslashes (`) in file paths, NOT forward slashes (/).** & echo. & echo #### WRONG - Will cause errors: & echo ``` & echo Edit(file_path: \"D:/repos/project/file.tsx\", ...) & echo MultiEdit(file_path: \"D:/repos/project/file.tsx\", ...) & echo ``` & echo. & echo #### CORRECT - Always works: & echo ``` & echo Edit(file_path: \"D:\\repos\\project\\file.tsx\", ...) & echo MultiEdit(file_path: \"D:\\repos\\project\\file.tsx\", ...) & echo ```",
+            "timeout": 5
+          }
+        ]
+      }
+    ]
+  }
+}

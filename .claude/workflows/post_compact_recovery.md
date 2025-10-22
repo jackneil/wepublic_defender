@@ -10,6 +10,30 @@ When context compaction happens, you lose the working memory of:
 
 This workflow helps you recover that context efficiently.
 
+---
+
+## CRITICAL: File Editing on Windows
+
+### ⚠️ MANDATORY: Always Use Backslashes on Windows for File Paths
+
+**When using Edit or MultiEdit tools on Windows, you MUST use backslashes (`\`) in file paths, NOT forward slashes (`/`).**
+
+#### ❌ WRONG - Will cause errors:
+```
+Edit(file_path: "D:/repos/project/file.tsx", ...)
+MultiEdit(file_path: "D:/repos/project/file.tsx", ...)
+```
+
+#### ✅ CORRECT - Always works:
+```
+Edit(file_path: "D:\\repos\\project\\file.tsx", ...)
+MultiEdit(file_path: "D:\\repos\\project\\file.tsx", ...)
+```
+
+**This is a known bug in Claude Code** - Edit/MultiEdit require backslashes on Windows even though Bash commands use forward slashes.
+
+---
+
 ## 1. Re-Read Master Instructions
 
 **You are here now** - CLAUDE.md directed you to read this file after detecting compaction.

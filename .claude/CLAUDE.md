@@ -1,8 +1,74 @@
+# !!! MANDATORY SESSION START - FIRST ACTION EVERY SESSION !!!
+
+═══════════════════════════════════════════════════════════════════════════════
+                            STOP AND READ THIS FIRST
+═══════════════════════════════════════════════════════════════════════════════
+
+## CRITICAL: IS THIS YOUR FIRST RESPONSE IN THIS SESSION?
+
+**BEFORE responding to the user, answer this question:**
+
+→ **Have you loaded context from session_notes.md, case_timeline.md, and GAMEPLAN.md yet?**
+
+   **NO?** → **STOP RIGHT NOW AND DO THIS:**
+
+   1. Read `.claude/SESSION_START_MANDATORY.md` (10 seconds)
+   2. Follow `.claude/workflows/session_start_checklist.md` (30 seconds)
+   3. THEN respond to user with stage-appropriate options
+
+   **THIS WORKS IN PLAN MODE** - Reading files is non-destructive and allowed!
+
+   **YES?** → You already ran the checklist, proceed with user's request
+
+═══════════════════════════════════════════════════════════════════════════════
+
+**Why this is MANDATORY:**
+
+- Users shouldn't have to explain context every session
+- You need to know what was worked on last time
+- You need to see upcoming deadlines
+- You should proactively offer relevant next actions
+- This makes the user's life easier
+
+**How to verify you did this:**
+
+After running session start checklist, you should know:
+- [ ] What was worked on last session (from session_notes.md)
+- [ ] Recent case events (from case_timeline.md)
+- [ ] Upcoming deadlines (from GAMEPLAN.md)
+- [ ] What files are in inbox (from 00_NEW_DOCUMENTS_INBOX/)
+- [ ] Current case stage (PRE-FILING, DISCOVERY, MOTION PRACTICE, TRIAL PREP, GENERAL)
+
+If you don't know these things and this is your first message, GO TO `.claude/SESSION_START_MANDATORY.md` NOW.
+
+═══════════════════════════════════════════════════════════════════════════════
+
 # Legal Case Management - Claude Code Orchestrator
 
 **You are assisting with a legal case using the wepublic_defender system.**
 
 This file provides core configuration and conditional logic to load the appropriate workflow for each situation.
+
+---
+
+## Session Start Mechanisms (Multiple Redundant Layers)
+
+### Layer 1: SessionStart Hook (Automatic)
+- `.claude/hooks/SessionStart` fires when Claude Code opens (if hooks enabled)
+- Outputs instructions to follow `session_start_checklist.md`
+- Most reliable method when hooks are working
+
+### Layer 2: SESSION_START_MANDATORY.md (Failsafe)
+- If hook didn't fire, the giant warning above should catch you
+- Points to `.claude/SESSION_START_MANDATORY.md` for quick reference
+- Works EVEN IN PLAN MODE (reading is allowed)
+
+### Layer 3: Manual Override (/start command)
+- User can type `/start` anytime to re-run session checklist
+- Useful after long sessions or when context is stale
+- Backup if automation fails
+
+**The goal: Make it impossible for you to skip session start and make users repeat themselves.**
 
 ---
 
@@ -228,7 +294,7 @@ To run single model: Use `--model <model_name>` flag.
 
 These files COMPLEMENT (not replace) existing tracking:
 
-- `.database/organization_log.md` - File movements and organization actions
+- `.database/file_management_log.md` - File movements and organization actions
 - `.database/file_management_index.json` - Index of processed files
 - `.wepublic_defender/usage_log.csv` - API usage and costs
 - `.wepublic_defender/reviews/` - Agent review outputs
@@ -546,8 +612,7 @@ Stick to: A-Z, 0-9, and basic symbols: - * [ ] ! ? . , : ; " ' ( ) / \ | _
    ```json
    {
      "python_exe": "C:/Users/you/.conda/envs/wepublic_defender/python.exe",
-     "conda_env": "wepublic_defender",
-     "repo_path": "C:/path/to/wepublic_defender"
+     "conda_env": "wepublic_defender"
    }
    ```
 
@@ -662,65 +727,60 @@ Override:
 --run-both
 ```
 
-###  ⏱️ Bash Command Timeouts for LLM Agent Calls (CRITICAL)
+### ⏱️ Long-Running Commands and Auto-Backgrounding
 
-**ALWAYS specify extended timeout when running agents in external-llm mode via Bash.**
+**Claude Code 2.0.22+ automatically backgrounds long-running bash commands.**
 
-The Bash tool has a default 120-second (2-minute) timeout that will kill long-running LLM calls even if the Python/LLM timeouts are configured longer.
+**No more manual timeout workarounds needed!** Claude monitors background tasks and can check their progress.
 
-#### Required Timeout
+#### How It Works
 
-- **Minimum: 600000ms (10 minutes)** for any `--mode external-llm` command
-- Applies to ALL agents: self_review, citation_verify, opposing_counsel, drafter, etc.
-- Without this parameter, Bash will terminate the process at exactly 2 minutes
+Long-running commands (like external-llm agent calls) automatically move to background if they take too long:
+- Bash tool auto-backgrounds instead of killing commands
+- Claude monitors logs in real-time
+- Can debug from logs when processes crash
+- Use `/bashes` command to check running tasks
 
-#### Why This Matters
+#### Running Agent Commands
 
-- Large documents (10K+ tokens) with web search can take 3-5 minutes per model
-- Running 2 models in parallel means waiting for the slower one to complete
-- gpt-5 with high reasoning effort can take 2-4 minutes for complex legal documents
-- Grok-4 with web search may take 1-3 minutes depending on search results
-
-#### Correct Usage
-
-✅ **CORRECT - Includes timeout parameter:**
+**Simple - just run them:**
 
 ```python
+# Automatically backgrounds if needed (citation verification with web search, etc.)
 Bash(
-    command="C:/Users/jack/.conda/envs/wepublic_defender/python.exe -m wepublic_defender.cli.run_agent --agent self_review --file draft.md --mode external-llm --verbose",
-    description="Run self_review agent",
-    timeout=600000  # 10 minutes - REQUIRED!
+    command="C:/Users/jack/.conda/envs/wepublic_defender/python.exe -m wepublic_defender.cli.run_agent --agent citation_verify --file draft.md --mode external-llm --web-search",
+    description="Run citation verification"
 )
 ```
 
-❌ **WRONG - Will timeout at 2 minutes:**
+**No more `timeout=600000` required** for most operations.
+
+#### Checking Background Task Status
+
+User can type `/bashes` to see:
+- All running background shells
+- Command being executed
+- Runtime
+- Status (running/completed)
+
+#### When to Still Use Timeout
+
+Rarely needed, but specify timeout if you need a command to fail after specific time:
 
 ```python
-Bash(
-    command="C:/Users/jack/.conda/envs/wepublic_defender/python.exe -m wepublic_defender.cli.run_agent --agent self_review --file draft.md --mode external-llm --verbose",
-    description="Run self_review agent"
-    # Missing timeout parameter - will be killed at 120 seconds!
-)
+# Force timeout after 5 minutes (rare)
+Bash(command="...", timeout=300000)
 ```
-
-#### When to Use Extended Timeout
-
-Always use `timeout=600000` for:
-- Any `--mode external-llm` agent call
-- Any `--run-both` flag (runs 2 models in parallel)
-- Any agent with `--web-search` enabled
-- Any operation on documents > 5,000 tokens
-- Citation verification (always needs extended timeout)
 
 #### Incremental Result Saving
 
-The CLI automatically saves each model's results immediately upon completion to `.wepublic_defender/reviews/` directory. This prevents data loss if one model times out while the other completes successfully.
+The CLI automatically saves each model's results immediately upon completion to `.wepublic_defender/reviews/` directory. This prevents data loss if process crashes.
 
 Results are saved as:
 - JSON: `.wepublic_defender/reviews/{agent}_{model}_{timestamp}.json`
 - Markdown: `.wepublic_defender/reviews/{agent}_{model}_{timestamp}.md`
 
-This means even if the Bash command times out, any models that completed before the timeout will have their results preserved.
+Even if command backgrounds or times out, completed models have results preserved.
 
 ---
 
@@ -735,17 +795,28 @@ This means even if the Bash command times out, any models that completed before 
 
 ## 💾 State Tracking (.database)
 
-Claude manages lightweight state directly:
+The `.database/` directory (per-case, in case root) tracks file management state to prevent duplicate work.
 
-**Ledger**: `.database/organization_log.md`
+**Created during case initialization**. Contains:
+
+**Ledger**: `.database/file_management_log.md`
 - Format: `timestamp | action | src | dst | notes`
 - Append one line per file management action
+- Human-readable audit trail
 
-**Index**: `.database/organization_index.json`
-- JSON object keyed by path
+**Index**: `.database/file_management_index.json`
+- JSON object keyed by file path
 - Tracks what's been processed to avoid duplicate work
+- Quick lookup: "Have I processed this file?"
 
-Read index before organizing to skip already-processed files/folders.
+**README**: `.database/README.md`
+- Explains purpose and usage
+- Documents file formats
+
+**Usage:**
+- Read index before organizing to skip already-processed files
+- Check during session start for organization stats
+- Never commit `.database/` contents (gitignored)
 
 ---
 
@@ -843,5 +914,19 @@ This orchestrator file is **lightweight and focused on routing**. Detailed workf
 - When in doubt, ask the user
 
 ---
+
+═══════════════════════════════════════════════════════════════════════════════
+                      FINAL SAFETY CHECK - DID YOU SKIP SESSION START?
+═══════════════════════════════════════════════════════════════════════════════
+
+**If you're reading this and it's your FIRST message in a new session:**
+
+→ **Did you load context from session_notes.md, case_timeline.md, and GAMEPLAN.md?**
+
+   **NO?** → You skipped session start! GO BACK TO TOP OF THIS FILE NOW!
+
+   **YES?** → Great, proceed with user's request
+
+═══════════════════════════════════════════════════════════════════════════════
 
 **Now execute the workflow routing logic at the top of this file to determine your next action.**
