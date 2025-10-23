@@ -407,6 +407,103 @@ Show me an example of a motion for extension
 
 Claude provides templates and examples.
 
+## Understanding Claude Code Modes
+
+Claude Code has different operating modes that affect how it works. Understanding these helps you control the workflow.
+
+### Auto-Accept Mode (Default)
+- Claude makes changes immediately without asking
+- **Don't use for legal work** - too risky
+- Good for: Quick file organization, simple tasks
+
+### Manual Accept Mode
+- Claude proposes changes, you approve each one
+- More control but tedious for large reviews
+- Good for: Small edits, learning what Claude does
+
+### Plan Mode (RECOMMENDED FOR LEGAL WORK)
+- Claude presents a complete plan before doing anything
+- You review the strategy, then approve execution
+- **Use this when processing agent results**
+- Good for: Document reviews, research processing, anything important
+
+### How to Switch Modes
+- **Enter Plan Mode**: Type `/plan` or press Ctrl+P
+- **Exit Plan Mode**: Approve the plan when ready
+- **Manual Mode**: Settings → Edit Mode → "Manual Accept"
+
+### Best Practice for Legal Work
+
+1. Run an agent (self_review, citation_verify, opposing_counsel)
+2. **SWITCH TO PLAN MODE** before processing results
+3. Let Claude analyze findings and propose next steps
+4. Review the plan carefully
+5. Approve to execute
+
+**Why this matters**: Legal work requires deliberate decision-making. Plan mode forces you (and Claude) to think before acting.
+
+## Claude Code Advanced Features
+
+### Tab Key: Show Claude's Thinking
+
+Press Tab to show/hide Claude's internal reasoning process.
+
+**Why it matters for legal work:**
+- See Claude's analysis before it proposes changes
+- Understand WHY Claude recommends certain fixes
+- Catch faulty reasoning before accepting suggestions
+- Learn legal concepts by watching Claude reason through them
+
+**How to use:**
+1. Claude starts processing agent results
+2. Press Tab → see Claude's reasoning appear in real-time
+3. Press Tab again → hide reasoning, keep output clean
+
+**Best practice**: Keep thinking visible when processing complex results (citation verification, opposing counsel attacks). Hide it for simple tasks.
+
+### /bashes: Monitor Background Tasks
+
+Shows all running background processes and their status.
+
+**Why it matters:**
+- Long-running agent calls auto-background in Claude Code 2.0.22+
+- Check if citation verification still running (can take 3-5 minutes with web search)
+- Monitor multiple parallel agent calls
+- Debug when processes seem stuck
+
+**How to use:**
+```
+Type: /bashes
+
+You'll see:
+Shell ID | Command | Status | Runtime
+---------|---------|--------|--------
+bash_1   | citation_verify | Running | 2m 34s
+bash_2   | opposing_counsel | Running | 1m 12s
+```
+
+**Common scenarios:**
+
+*Citation verification with web search:*
+```
+You: /review draft.md
+Claude runs citation_verify with web search...
+[2 minutes pass]
+You: /bashes
+Shows: citation_verify still running, 3m 45s elapsed
+```
+
+*Multiple parallel agents:*
+```
+Claude: Running self_review and opposing_counsel in parallel...
+You: /bashes
+Shows:
+- self_review: Complete, 2m 14s
+- opposing_counsel: Running, 4m 56s
+```
+
+**Note**: Claude Code 2.0.22+ automatically backgrounds long-running commands. No more manual timeout workarounds needed.
+
 ## Tips for Success
 
 ### Be Specific
