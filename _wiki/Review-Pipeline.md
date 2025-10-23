@@ -144,7 +144,7 @@ Claude gives you a checklist to review yourself:
 
 When you run in external-LLm mode:
 ```
-/review my_motion.md --mode external-llm
+/review my_motion.md --mode external-LLM
 ```
 
 Multiple AIs actually review your document:
